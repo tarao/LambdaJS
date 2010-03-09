@@ -82,8 +82,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
                 if (fv1[v] && fv2[self.arg]) {
+                    // alpha conversion
                     fv2[v] = true;
-                    var fresh = ns.Util.freshVar(fv2, self.arg);
+                    var fresh = ns.Util.freshVar(fv2, 'a');
                     self.body = self.body.subst(fresh, self.arg);
                     self.arg = self.arg.subst(fresh, self.arg);
                 }
