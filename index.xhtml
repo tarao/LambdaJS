@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+                      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+  <script type="text/javascript;version=1.8" src="./lambda.js"></script>
+  <link rel="stylesheet" type="text/css" href="./default.css" />
+  <link rel="start" href="http://orezdnu.org/" />
+  <link rev="made" href="http://orezdnu.org/" />
+  <title>Lambda calculus in JS syntax</title>
+</head>
+<body onload="init()">
+  <div id="article">
+    <h1>Lambda calculus in JS syntax</h1>
+
+    <dl>
+      <dt>code1</dt>
+      <dd>
+        <pre><code id="code1">let k = function(x) function(y) x;
+let s = function(x) function(y) function(z) x(z)(y(z));
+s(k)(k);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code1" href=".">run code1</a></p>
+  </div>
+</body>
+</html>
