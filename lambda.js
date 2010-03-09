@@ -1,4 +1,17 @@
-var LambdaJS = {};
+/*
+  TODO:
+  - AST base object: function(arg){ return new App(self, arg) }
+  - higher order function
+  - reduce -> visit (for PP and the other functionalities)
+  - interactive UI
+  -- push into stack when eval return undefined (e.g. let)
+  -- mark redex
+  -- manual mode (strategy which requires user to choose redex)
+  -- mark alpha conversion?
+  - test in other browsers
+*/
+
+if (typeof LambdaJS == 'undefined') var LambdaJS = {};
 
 (function(ns) {
     ns.Sandbox = function() {
@@ -8,25 +21,28 @@ var LambdaJS = {};
         this.fun = function(arg, f) {
             return new ns.Semantics.Abs(arg, f);
         };
-        this.do = function(code){ with (this) return eval(code); }
+        this.run = function(code){ with (this) return eval(code); }
     };
 
     var promote = function(v) {
-        return typeof v.reduce == 'undefined' ? new ns.Semantics.Var(v) : v;
+        if (['abs', 'app', 'var'].indexOf(v.type||'') == -1) {
+            return new ns.Semantics.Var(v);
+        }
+        return v;
     };
-    var freshVar = function(fv, v) {
-        if (!fv[v]) return v;
+    var freshVar = function(used, v) {
+        if (!used[v]) return v;
         if (/^([a-z])([0-9]*)$/.test(v)) {
             var code = RegExp.$1.charCodeAt(0)+1;
             var num = RegExp.$2;
             if ('z'.charCodeAt(0) < code) {
                 if (!num.length) num = 0;
-                return freshVar(fv, 'a'+(num+1));
+                return freshVar(used, 'a'+(num+1));
             } else {
-                return freshVar(fv, String.fromCharCode(code)+num);
+                return freshVar(used, String.fromCharCode(code)+num);
             }
         } else {
-            return freshVar(fv, 'a');
+            return freshVar(used, 'a');
         }
     };
 
@@ -90,22 +106,22 @@ var LambdaJS = {};
             };
             return self;
         },
-        Var: function(name) {
+        Var: function(v) {
             var self = function(arg) {
                 return new ns.Semantics.App(self, arg);
             };
             self.type = 'var';
-            self.name = name;
+            self.v = v;
             self.reduce = function(strategy){ return strategy.redVar(self); };
             self.subst = function(arg, v) {
-                return self.name == v ?  arg : self;
+                return self.v == v ?  arg : self;
             };
             self.fv = function() {
                 var fv = {};
-                fv[self.name] = true;
+                fv[self.v] = true;
                 return fv;
             };
-            self.toString = function(){ return self.name; };
+            self.toString = function(){ return self.v; };
             return self;
         },
         Strategy: {
@@ -235,7 +251,7 @@ function run(id) {
     var parsed = parser.parse(code.textContent);
     var sandbox = new LambdaJS.Sandbox();
 
-    var exp = sandbox.do(parsed.join(''));
+    var exp = sandbox.run(parsed.join(''));
 
     code.appendChild(document.createElement('br'));
     while (true) {
@@ -248,7 +264,7 @@ function run(id) {
         if (!st.reduced) break;
     }
 
-    var exp = sandbox.do(parsed.join(''));
+    var exp = sandbox.run(parsed.join(''));
 
     code.appendChild(document.createElement('br'));
     while (true) {
@@ -261,7 +277,7 @@ function run(id) {
         if (!st.reduced) break;
     }
 
-    var exp = sandbox.do(parsed.join(''));
+    var exp = sandbox.run(parsed.join(''));
 
     code.appendChild(document.createElement('br'));
     while (true) {

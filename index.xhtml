@@ -22,6 +22,16 @@ s(k)(k);</code></pre>
       </dd>
     </dl>
     <p><a id="run-code1" href=".">run code1</a></p>
+
+    <dl>
+      <dt>code2</dt>
+      <dd>
+        <pre><code id="code2">var k = function(x){ return function(y){ return x } };
+var s = function(x){ return function(y){ return function(z){ return x(z)(y(z)) } } };
+s(k)(k);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code2" href=".">run code2</a></p>
   </div>
 </body>
 </html>
