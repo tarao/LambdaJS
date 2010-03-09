@@ -1,8 +1,6 @@
 /*
   TODO:
-  - AST base object: function(arg){ return new App(self, arg) }
   - higher order function
-  - reduce -> visit (for PP and the other functionalities)
   - interactive UI
   -- push into stack when eval return undefined (e.g. let)
   -- mark redex
@@ -18,42 +16,63 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var window = null;
         var document = null;
         var alert = null;
-        this.fun = function(arg, f) {
-            return new ns.Semantics.Abs(arg, f);
-        };
+        this.fun = function(arg, f){ return new ns.Semantics.Abs(arg, f); };
         this.run = function(code){ with (this) return eval(code); }
     };
 
-    var promote = function(v) {
-        if (['abs', 'app', 'var'].indexOf(v.type||'') == -1) {
-            return new ns.Semantics.Var(v);
-        }
-        return v;
-    };
-    var freshVar = function(used, v) {
-        if (!used[v]) return v;
-        if (/^([a-z])([0-9]*)$/.test(v)) {
-            var code = RegExp.$1.charCodeAt(0)+1;
-            var num = RegExp.$2;
-            if ('z'.charCodeAt(0) < code) {
-                if (!num.length) num = 0;
-                return freshVar(used, 'a'+(num+1));
-            } else {
-                return freshVar(used, String.fromCharCode(code)+num);
+    ns.Util = {
+        promote: function(v) {
+            if (['Abs', 'App', 'Var'].indexOf(v.type||'') == -1) {
+                return new ns.Semantics.Var(v);
             }
-        } else {
-            return freshVar(used, 'a');
+            return v;
+        },
+        freshVar: function(used, v) {
+            if (!used[v]) return v;
+            if (/^([a-z])([0-9]*)$/.test(v)) {
+                var code = RegExp.$1.charCodeAt(0)+1;
+                var num = RegExp.$2;
+                if ('z'.charCodeAt(0) < code) {
+                    if (!num.length) num = 0;
+                    return freshVar(used, 'a'+(num+1));
+                } else {
+                    return freshVar(used, String.fromCharCode(code)+num);
+                }
+            } else {
+                return freshVar(used, 'a');
+            }
         }
     };
 
+    ns.Ast = function(type, args) {
+        var self = function(arg) {
+            return new ns.Semantics.App(self, arg);
+        };
+        self.type = type;
+        if (type == 'Abs') {
+            self.body = args[1].call(null, new ns.Semantics.Var(args[0]));
+            self.arg = ns.Util.promote(args[0]);
+        } else if (type == 'App') {
+            self.fun = args[0];
+            self.arg = ns.Util.promote(args[1]);
+        } else if (type == 'Var') {
+            self.v = args[0];
+        }
+        return self;
+    };
+
     ns.Semantics = {
+        Base: function(type, args) {
+            var self =  ns.Ast(type, args);
+            [ 'reduce' ].forEach(function(m) {
+                self[m] = function(visitor) {
+                    return visitor[m+self.type](self);
+                }
+            });
+            return self;
+        },
         Abs: function(arg, func) {
-            var self = function(arg) {
-                return new ns.Semantics.App(self, arg);
-            };
-            self.type = 'abs';
-            self.arg = promote(arg);
-            self.body = func.call(null, new ns.Semantics.Var(arg));
+            var self = ns.Semantics.Base('Abs', arguments);
             self.subst = function(arg, v) { // (\x.M)[v:=N]
                 if (typeof v == 'undefined') {
                     v = self.arg;
@@ -64,7 +83,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var fv2 = arg.fv();         // fv(N)
                 if (fv1[v] && fv2[self.arg]) {
                     fv2[v] = true;
-                    var fresh = freshVar(fv2, self.arg);
+                    var fresh = ns.Util.freshVar(fv2, self.arg);
                     self.body = self.body.subst(fresh, self.arg);
                     self.arg = self.arg.subst(fresh, self.arg);
                 }
@@ -76,20 +95,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 fv[self.arg] = false;
                 return fv;
             };
-            self.reduce = function(strategy){ return strategy.redAbs(self); };
             self.toString = function() {
                 return [ 'Fun(', self.arg, ') ', self.body, ].join('');
             };
             return self;
         },
         App: function(func, arg) {
-            var self = function(arg) {
-                return new ns.Semantics.App(self, arg);
-            };
-            self.type = 'app';
-            self.fun = func;
-            self.arg = promote(arg);
-            self.reduce = function(strategy){ return strategy.redApp(self); };
+            var self = ns.Semantics.Base('App', arguments);
             self.subst = function(arg, v) {
                 self.fun = self.fun.subst(arg, v);
                 self.arg = self.arg.subst(arg, v);
@@ -107,12 +119,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return self;
         },
         Var: function(v) {
-            var self = function(arg) {
-                return new ns.Semantics.App(self, arg);
-            };
-            self.type = 'var';
-            self.v = v;
-            self.reduce = function(strategy){ return strategy.redVar(self); };
+            var self = ns.Semantics.Base('Var', arguments);
             self.subst = function(arg, v) {
                 return self.v == v ?  arg : self;
             };
@@ -123,46 +130,47 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.toString = function(){ return self.v; };
             return self;
+        }
+    };
+
+    ns.Strategy = {
+        Generic: function() {
+            var self = { reduced: false };
+            // reduce by visitor pattern
+            self.reduce = function(exp){ return exp.reduce(this); };
+            self.reduceAbs = function(abs){ return abs; };
+            self.reduceApp = function(app) {
+                app.fun = app.fun.reduce(self);
+                if (app.fun.type != 'Abs') return app;
+                if (!self.reduced) {
+                    app.arg = self.reduceArg(app.arg);
+                }
+                if (!self.reduced) {
+                    self.reduced=true;
+                    return app.fun.subst(app.arg).body;
+                }
+                return app;
+            };
+            self.reduceArg = function(arg){ return arg; };
+            self.reduceVar = function(v){ return v; };
+            return self;
         },
-        Strategy: {
-            Generic: function() {
-                var self = { reduced: false };
-                // reduce by visitor pattern
-                self.reduce = function(exp){ return exp.reduce(this); };
-                self.redAbs = function(abs){ return abs; };
-                self.redApp = function(app) {
-                    app.fun = app.fun.reduce(self);
-                    if (app.fun.type != 'abs') return app;
-                    if (!self.reduced) {
-                        app.arg = self.redArg(app.arg);
-                    }
-                    if (!self.reduced) {
-                        self.reduced=true;
-                        return self.subst(app.fun, app.arg).body;
-                    }
-                    return app;
-                };
-                self.redArg = function(arg){ return arg; };
-                self.redVar = function(v){ return v; };
-                return self;
-            },
-            CallByName: function() {
-                var self = new ns.Semantics.Strategy.Generic();
-                return self;
-            },
-            CallByValue: function() {
-                var self = new ns.Semantics.Strategy.Generic();
-                self.redArg = function(arg){ return arg.reduce(self); };
-                return self;
-            },
-            NormalOrder: function() {
-                var self = new ns.Semantics.Strategy.Generic();
-                self.redAbs = function(abs) {
-                    abs.body = abs.body.reduce(self);
-                    return abs;
-                };
-                return self;
-            }
+        CallByName: function() {
+            var self = new ns.Strategy.Generic();
+            return self;
+        },
+        CallByValue: function() {
+            var self = new ns.Strategy.Generic();
+            self.reduceArg = function(arg){ return arg.reduce(self); };
+            return self;
+        },
+        NormalOrder: function() {
+            var self = new ns.Strategy.Generic();
+            self.reduceAbs = function(abs) {
+                abs.body = abs.body.reduce(self);
+                return abs;
+            };
+            return self;
         }
     };
 
@@ -258,7 +266,7 @@ function run(id) {
         code.appendChild(document.createTextNode((exp||'').toString()));
         if (typeof exp == 'undefined') break;
 
-        var st = new LambdaJS.Semantics.Strategy.CallByName();
+        var st = new LambdaJS.Strategy.CallByName();
         exp = exp.reduce(st);
         if (!st.reduced) break;
     }
@@ -271,7 +279,7 @@ function run(id) {
         code.appendChild(document.createTextNode((exp||'').toString()));
         if (typeof exp == 'undefined') break;
 
-        var st = new LambdaJS.Semantics.Strategy.CallByValue();
+        var st = new LambdaJS.Strategy.CallByValue();
         exp = exp.reduce(st);
         if (!st.reduced) break;
     }
@@ -284,7 +292,7 @@ function run(id) {
         code.appendChild(document.createTextNode((exp||'').toString()));
         if (typeof exp == 'undefined') break;
 
-        var st = new LambdaJS.Semantics.Strategy.NormalOrder();
+        var st = new LambdaJS.Strategy.NormalOrder();
         exp = exp.reduce(st);
         if (!st.reduced) break;
     }
