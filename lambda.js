@@ -143,7 +143,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     return app;
                 };
                 self.redArg = function(arg){ return arg; };
-                self.subst = function(f, arg){ return f.subst(arg); };
                 self.redVar = function(v){ return v; };
                 return self;
             },
