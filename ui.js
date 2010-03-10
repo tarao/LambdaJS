@@ -54,7 +54,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var li = $new('li');
                 for (var i=0; i < arguments.length; i++) {
                     var elm = arguments[i];
-                    if (typeof elm == 'string') elm = $text(elm);
+                    if (!(elm instanceof Node)) elm = $text(elm);
                     li.appendChild(elm);
                 }
                 self.view.appendChild(li);
@@ -79,7 +79,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         try {
                             self.command(text);
                         } catch (e) {
-                            self.err(e.message);
+                            var meta = [];
+                            [ 'fileName', 'lineNumber' ].forEach(function(x) {
+                                if (/^([a-z]+)/.test(x) && e[x])
+                                    meta.push(RegExp.$1 + ': ' + e[x]);
+                            });
+                            meta = meta.length ? ' ['+meta.join(', ')+']' : '';
+                            self.err(e.message + meta);
                         }
                         self.prompt();
                     }
