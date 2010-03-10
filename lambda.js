@@ -41,8 +41,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                             line
                         ].join("\n");
                     } else {
-                        throw e;
+                        throw { message: e.message };
                     }
+                } catch (e) {
+                    throw { message: e.message };
                 }
             }
         };
@@ -66,7 +68,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return v;
         },
         freshVar: function(used, v) {
-            if (!used[v]) return v;
+            if (!used[v]) return ns.Util.promote(v);
             if (/^([a-z])([0-9]*)$/.test(v)) {
                 var code = RegExp.$1.charCodeAt(0)+1;
                 var num = RegExp.$2;
@@ -111,21 +113,18 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         Abs: function(arg, func) {
             var self = ns.Semantics.Base('Abs', arguments);
-            self.subst = function(arg, v) { // (\x.M)[v:=N]
-                if (typeof v == 'undefined') {
-                    v = self.arg;
-                } else if (v == self.arg) { // (\x.M)[x:=N] = \x.M
-                    return self;
-                }
+            self.subst = function(arg, v) {     // (\x.M)[v:=N]
+                if (v == self.arg) return self; // (\x.M)[x:=N] = \x.M
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
-                if (fv1[v] && fv2[self.arg]) {
+                if (fv1[v||self.arg] && fv2[self.arg]) {
                     // alpha conversion
-                    fv2[v] = true;
+                    fv2[v||self.arg] = true;
                     var fresh = ns.Util.freshVar(fv2, 'a');
                     self.body = self.body.subst(fresh, self.arg);
                     self.arg = self.arg.subst(fresh, self.arg);
                 }
+                if (typeof v == 'undefined') v = self.arg;
                 self.body = self.body.subst(arg, v);
                 return self;
             };
@@ -143,6 +142,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = ns.Semantics.Base('App', arguments);
             self.subst = function(arg, v) {
                 self.fun = self.fun.subst(arg, v);
+                if (!self.arg.subst) {
+                    alert(self.arg);
+                }
                 self.arg = self.arg.subst(arg, v);
                 return self;
             };
