@@ -4,14 +4,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
 <head>
   <script type="text/javascript;version=1.8" src="./lambda.js"></script>
+  <script type="text/javascript" src="./ui.js"></script>
   <link rel="stylesheet" type="text/css" href="./default.css" />
+  <link rel="stylesheet" type="text/css" href="./lambda.css" />
   <link rel="start" href="http://orezdnu.org/" />
   <link rev="made" href="http://orezdnu.org/" />
   <title>Lambda calculus in JS syntax</title>
 </head>
-<body onload="init()">
+<body onload="init(); ui('console')">
   <div id="article">
     <h1>Lambda calculus in JS syntax</h1>
+
+    <div id="console"></div>
 
     <dl>
       <dt>code1</dt>

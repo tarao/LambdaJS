@@ -1,10 +1,12 @@
 /*
   TODO:
   - higher order function
+  - \x.M syntax
   - interactive UI
-  -- push into stack when eval return undefined (e.g. let)
+  -- resizer on console
   -- mark redex
   -- manual mode (strategy which requires user to choose redex)
+  -- abort button
   -- mark alpha conversion?
   - test in other browsers
 */
@@ -17,7 +19,43 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var document = null;
         var alert = null;
         this.fun = function(arg, f){ return new ns.Semantics.Abs(arg, f); };
-        this.run = function(code){ with (this) return eval(code); }
+        this.run = function(code){ with (this) return eval(code); };
+    };
+
+    ns.Env = function() {
+        var self = {
+            parser: new ns.Parser(),
+            sandbox: new ns.Sandbox(),
+            stack: []
+        };
+        self.evalResolvingReference = function(line) {
+            while (true) {
+                try {
+                    return self.sandbox.run(line);
+                } catch (e if e instanceof ReferenceError) {
+                    if (/^([^\s]+) is not defined$/.test(e.message)) {
+                        line = [
+                            [ 'var', RegExp.$1, '=',
+                              "LambdaJS.Util.promote('"+RegExp.$1+"');"
+                            ].join(' '),
+                            line
+                        ].join("\n");
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+        };
+        self.evalLine = function(line) {
+            line = self.parser.parseLine(line);
+            var code = self.stack.concat([line]).join("\n");
+            var ret = self.evalResolvingReference(code);
+            if (typeof ret == 'undefined') {
+                self.stack.push(line);
+            }
+            return ret;
+        };
+        return self;
     };
 
     ns.Util = {
@@ -138,7 +176,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         Generic: function() {
             var self = { reduced: false };
             // reduce by visitor pattern
-            self.reduce = function(exp){ return exp.reduce(this); };
+            self.reduce = function(exp) {
+                self.reduced = false;
+                return exp.reduce(this);
+            };
             self.reduceAbs = function(abs){ return abs; };
             self.reduceApp = function(app) {
                 app.fun = app.fun.reduce(self);
@@ -175,73 +216,69 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         }
     };
 
-    ns.Parser = {
-        JS: function() {
-            var self = {};
-            self.parse = function(text) {
-                return (text||'')
-                    .replace(new RegExp('//.*[\r\n]', 'g'), '')
-                    .replace(/[\r\n\t]/g, ' ')
-                    .replace(new RegExp('/\\*.*?\\*/', 'g'), '')
-                    .split(/;/).map(function(l) {
-                        return self.parseLine(l);
-                    }).filter(function(l) { return !/^\s*$/.test(l) });
-            };
-            self.parseLine = function(line) {
-                line = line.replace(/^\s*/, '').replace(/\s*$/, '');
-                if (/;/.test(line.charAt(line.length-1))) {
-                    line = line.substring(0, line.length-1);
+    ns.Parser =  function() {
+        var self = {};
+        self.parse = function(text) {
+            return (text||'')
+                .replace(new RegExp('//.*[\r\n]', 'g'), '')
+                .replace(/[\r\n\t]/g, ' ')
+                .replace(new RegExp('/\\*.*?\\*/', 'g'), '')
+                .split(/;/).map(function(l) {
+                    return self.parseLine(l);
+                }).filter(function(l) { return !/^\s*$/.test(l) });
+        };
+        self.parseLine = function(line) {
+            line = line.replace(/^\s*/, '').replace(/\s*$/, '');
+            if (/;/.test(line.charAt(line.length-1))) {
+                line = line.substring(0, line.length-1);
+            }
+            return line.length ? self.parseExpr(line)+';' : '';
+        };
+        self.parseExpr = function(str) {
+            var arr = [];
+            while (str.length) {
+                var first = str.charAt(0);
+                if (/[({[]/.test(first)) {
+                    var index = self.matchParen(str);
+                    arr.push(first,
+                             self.parseExpr(str.substring(1, index)),
+                             str.charAt(index));
+                    str = str.substring(index+1);
+                } else if (/^function\(([^)]*)\)(.*)$/.test(str)) {
+                    var args = RegExp.$1;
+                    var body = RegExp.$2;
+                    escaped = args.split(/,/).map(function(arg) {
+                        arg = arg.replace(/^\s*/, '').replace(/\s*$/, '');
+                        return "'"+arg+"'";
+                    });
+                    // TODO: check if escaped.length == 1
+                    arr.push('fun('+escaped[0]+",",
+                             'function(', args, ')',
+                             self.parseExpr(body), ')');
+                    str = '';
+                } else {
+                    arr.push(first);
+                    str = str.substring(1);
                 }
-                return line.length ? self.parseExpr(line)+';' : '';
-            };
-            self.parseExpr = function(str) {
-                var arr = [];
-                while (str.length) {
-                    var first = str.charAt(0);
-                    if (/[({[]/.test(first)) {
-                        var index = self.matchParen(str);
-                        arr.push(first,
-                                 self.parseExpr(str.substring(1, index)),
-                                 str.charAt(index));
-                        str = str.substring(index+1);
-                    } else if (/^function\(([^)]*)\)(.*)$/.test(str)) {
-                        var args = RegExp.$1;
-                        var body = RegExp.$2;
-                        escaped = args.split(/,/).map(function(arg) {
-                            arg = arg.replace(/^\s*/, '').replace(/\s*$/, '');
-                            return "'"+arg+"'";
-                        });
-                        // TODO: check if escaped.length == 1
-                        arr.push('fun('+escaped[0]+",",
-                                 'function(', args, ')',
-                                 self.parseExpr(body), ')');
-                        str = '';
-                    } else {
-                        arr.push(first);
-                        str = str.substring(1);
-                    }
+            }
+            return arr.join('');
+        };
+        self.matchParen = function(str) {
+            var paren = { '[': ']', '(': ')', '{': '}' };
+            var open = str.charAt(0);
+            var close = paren[open];
+            var depth = 0;
+            if (!close) return str.length;
+            for (var i=0; i<str.length; i++) {
+                if (str.charAt(i) == close) {
+                    if (--depth == 0) return i;
+                } else if (str.charAt(i) == open) {
+                    depth++;
                 }
-                return arr.join('');
-            };
-            self.matchParen = function(str) {
-                var paren = { '[': ']', '(': ')', '{': '}' };
-                var open = str.charAt(0);
-                var close = paren[open];
-                var depth = 0;
-                if (!close) return str.length;
-                for (var i=0; i<str.length; i++) {
-                    if (str.charAt(i) == close) {
-                        if (--depth == 0) return i;
-                    } else if (str.charAt(i) == open) {
-                        depth++;
-                    }
-                }
-                return str.length;
-            };
-            return self;
-        },
-        Lambda: function() {
-        }
+            }
+            return str.length;
+        };
+        return self;
     };
 
     ns.PP = {
@@ -255,7 +292,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
 function run(id) {
     var code = document.getElementById(id);
 
-    var parser = new LambdaJS.Parser.JS();
+    var parser = new LambdaJS.Parser();
     var parsed = parser.parse(code.textContent);
     var sandbox = new LambdaJS.Sandbox();
 

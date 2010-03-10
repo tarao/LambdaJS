@@ -1,0 +1,49 @@
+#console
+{
+  height: 20em;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  white-space: nowrap;
+  border-style: solid;
+  border-width: 4px;
+  border-color: #999999;
+  background-color: #eeeeee;
+  font-family: monospace;
+}
+
+#console ul
+{
+  list-style-type: none;
+  margin: 0;
+  padding: 0 .5em;
+}
+
+#console ul li
+{
+  margin-left: 0;
+}
+
+#console input
+{
+  width: 100%;
+  display: inline;
+  border-style: none;
+  background-color: #ffffff;
+}
+
+#console ul li.userinput
+{
+  font-weight: bold;
+}
+
+#console ul li.error
+{
+  color: #ff0000;
+}
+
+.prompt
+{
+  color: #999999;
+  font-weight: bold;
+  margin-right: .5em;
+}
