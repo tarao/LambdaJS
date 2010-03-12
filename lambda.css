@@ -1,4 +1,4 @@
-#console
+.console
 {
   height: 20em;
   overflow-x: hidden;
@@ -6,37 +6,38 @@
   white-space: nowrap;
   border-style: solid;
   border-width: 4px;
-  border-color: #999999;
-  background-color: #eeeeee;
+  border-color: #333333;
+  background-color: #000000;
+  color: #ffffff;
   font-family: monospace;
 }
 
-#console ul
+.console ul
 {
   list-style-type: none;
   margin: 0;
   padding: 0 .5em;
 }
 
-#console ul li
+.console ul li
 {
   margin-left: 0;
 }
 
-#console input
+.console input
 {
   width: 100%;
   display: inline;
   border-style: none;
-  background-color: #ffffff;
+  background-color: #181818;
 }
 
-#console ul li.userinput
+.console ul li.userinput
 {
   font-weight: bold;
 }
 
-#console ul li.error
+.console ul li.error
 {
   color: #ff0000;
 }

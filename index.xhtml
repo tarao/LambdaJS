@@ -5,17 +5,18 @@
 <head>
   <script type="text/javascript;version=1.8" src="./lambda.js"></script>
   <script type="text/javascript" src="./ui.js"></script>
+  <script type="text/javascript" src="./setup.js"></script>
   <link rel="stylesheet" type="text/css" href="./default.css" />
   <link rel="stylesheet" type="text/css" href="./lambda.css" />
   <link rel="start" href="http://orezdnu.org/" />
   <link rev="made" href="http://orezdnu.org/" />
   <title>Lambda calculus in JS syntax</title>
 </head>
-<body onload="init(); ui('console')">
+<body onload="setup('console')">
   <div id="article">
     <h1>Lambda calculus in JS syntax</h1>
 
-    <div id="console"></div>
+    <div id="console" class="console"></div>
 
     <dl>
       <dt>code1</dt>

@@ -1,11 +1,12 @@
-if (typeof LambdaJS == 'undefined') var LambdaJS = {};
+if (typeof UI == 'undefined') var UI = {};
 
 (function(ns) {
-    var $ = function(id) {
-        return ns.UI.doc.getElementById(id);
+    ns.doc = ns.doc || document;
+    ns.$ = function(id) {
+        return ns.doc.getElementById(id);
     };
-    var $new = function(tag, args) {
-        var elm = ns.UI.doc.createElement(tag);
+    ns.$new = function(tag, args) {
+        var elm = ns.doc.createElement(tag);
         args = args || {};
         if (args.id) elm.id = args.id;
         if (args.klass) elm.className = args.klass;
@@ -22,31 +23,22 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         }
         return elm;
     };
-    var $text = function(str){ return ns.UI.doc.createTextNode(str); };
-
-    ns.UI = {
-        setup: function(doc, elm) {
-            ns.UI.doc = doc;
-            ns.UI.console = new ns.UI.Console(elm);
-            return ns.UI.console;
-        },
-        Util: {
-            addEvent: function(element, event, func) {
-                if (element.addEventListener) {
-                    if (event.indexOf('on') == 0) {
-                        event = event.substr(2);
-                    }
-                    element.addEventListener(event, func, false);
-                } else if (element.attachEvent) {
-                    element.attachEvent(event, func);
-                }
+    ns.$text = function(str){ return ns.doc.createTextNode(str); };
+    ns.addEvent = function(element, event, func) {
+        if (element.addEventListener) {
+            if (event.indexOf('on') == 0) {
+                event = event.substr(2);
             }
-        },
-        Console: function(elm) {
+            element.addEventListener(event, func, false);
+        } else if (element.attachEvent) {
+            element.attachEvent(event, func);
+        }
+    };
+    with (ns) {
+        ns.Console = function(elm) {
             var self = {
                 view: $new('ul'),
                 promptChar: '>',
-                env: new ns.Env(),
                 command: function(cmd){}
             };
             elm.appendChild(self.view);
@@ -71,8 +63,8 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 self.input = $new('input');
                 self.input.value = '';
                 var li = self.insert(p, self.input);
-                ns.UI.Util.addEvent(self.input, 'onkeyup', function(e) {
-                    if (e.keyCode == 13) { // enter
+                addEvent(self.input, 'onkeyup', function(e) {
+                    if (e.keyCode == 13) { // Enter
                         var text = self.input.value;
                         self.view.removeChild(li);
                         self.insert(p, text).className = 'userinput';
@@ -94,22 +86,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.prompt();
             return self;
-        }
-    };
-})(LambdaJS);
-
-function ui(id) {
-    var elm = document.getElementById(id);
-    var console = LambdaJS.UI.setup(document, elm);
-    var env = new LambdaJS.Env();
-    console.command = function(cmd) {
-        var exp = env.evalLine(cmd);
-        if (exp) {
-            var st = new LambdaJS.Strategy.NormalOrder();
-            do {
-                console.insert(exp.toString());
-                exp = st.reduce(exp);
-            } while (st.reduced)
-        }
-    };
-};
+        };
+    }
+})(UI);
