@@ -18,7 +18,9 @@ if (typeof UI == 'undefined') var UI = {};
         if (args.child) {
             if (typeof args.child != 'Array') args.child = [ args.child ];
             for (var i=0; i < args.child.length; i++) {
-                elm.appendChild(args.child[i]);
+                var child = args.child[i];
+                if (!(child instanceof Node)) child = ns.$text(child);
+                elm.appendChild(child);
             }
         }
         return elm;
@@ -83,7 +85,7 @@ if (typeof UI == 'undefined') var UI = {};
             self.prompt = function() {
                 var p = $new('span', {
                     klass: 'prompt',
-                    child: $text(self.promptChar)
+                    child: self.promptChar
                 });
                 self.input = $new('input');
                 self.input.value = '';
