@@ -48,3 +48,27 @@
   font-weight: bold;
   margin-right: .5em;
 }
+
+#syntax
+{
+  border-collapse: collapse;
+}
+
+#syntax th, #syntax td
+{
+  padding: .5em;
+  border: 1px #999999 solid;
+}
+
+#syntax th, #syntax th a
+{
+  font-weight: bold;
+}
+
+#syntax code
+{
+  display: inline;
+  border-style: none;
+  background-color: inherit;
+  overflow: visible;
+}

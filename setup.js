@@ -54,8 +54,57 @@ function init() {
         }
     }
 };
+
+if (typeof Setup == 'undefined') var Setup = {};
+
+(function(ns) {
+    ns.testJS18 = function() {
+        return [
+            '(function(x) x)(1)',
+            'let x = 1'
+        ].every(function(t) {
+            try {
+                eval(t);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        });
+    };
+    ns.isJS18Enabled = function() {
+        if (typeof ns._isJS18Enabled == 'undefined') {
+            ns._isJS18Enabled = ns.testJS18();
+        }
+        return ns._isJS18Enabled;
+    };
+    ns.hideSyntax = function(table, hide) {
+        var hideCols = function(table, i) {
+            for (var j=0; j < table.rows.length; j++) {
+                var row = table.rows[j];
+                if (row) {
+                    var elm = row.cells[i];
+                    if (elm) elm.style.display = 'none';
+                }
+            }
+        };
+        var head = table.rows[0];
+        if (!head) return;
+        for (var i=0; i < head.cells.length; i++) {
+            if (head.cells[i].className == hide) {
+                hideCols(table, i);
+                break;
+            }
+        }
+    };
+})(Setup);
+
 function setup(id) {
-    init();
+    // hide unsupported syntax
+    Setup.hideSyntax(document.getElementById('syntax'),
+                     Setup.isJS18Enabled() ? 'javascript' : 'javascript18');
+
+    init(); // FIXME
+
     var elm = document.getElementById(id);
     var console = new UI.Console(elm);
     var env = new LambdaJS.Env();

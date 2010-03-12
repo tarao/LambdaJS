@@ -5,7 +5,7 @@
 <head>
   <script type="text/javascript;version=1.8" src="./lambda.js"></script>
   <script type="text/javascript" src="./ui.js"></script>
-  <script type="text/javascript" src="./setup.js"></script>
+  <script type="text/javascript;version=1.8" src="./setup.js"></script>
   <link rel="stylesheet" type="text/css" href="./default.css" />
   <link rel="stylesheet" type="text/css" href="./lambda.css" />
   <link rel="start" href="http://orezdnu.org/" />
@@ -14,9 +14,22 @@
 </head>
 <body onload="setup('console')">
   <div id="article">
-    <h1>Lambda calculus in JS syntax</h1>
+    <h1>Lambda calculus in JavaScript syntax</h1>
 
     <div id="console" class="console"></div>
+
+    <h2>Syntax</h2>
+
+    <table id="syntax" summary="syntax">
+      <tr><th></th><th class="lambda">Lambda</th><th class="javascript">JavaScript</th><th class="javascript18"><a href="http://developer.mozilla.org/en/New_in_JavaScript_1.8">JavaScript 1.8</a></th></tr>
+      <tr><th>variable</th><td><code>x</code></td><td><code>x</code></td><td><code>x</code></td></tr>
+      <tr><th>abstraction</th><td><code>&lambda;x.M</code> or <code>\x.M</code></td><td><code>function(x){ return M }</code></td><td><code>function(x) M</code></td></tr>
+      <tr><th>application</th><td><code>(M N)</code></td><td><code>M(N)</code></td><td><code>M(N)</code></td></tr>
+      <tr><th>declaration</th><td>-</td><td><code>var a = M</code></td><td><code>let a = M</code></td></tr>
+      <tr><th>syntax sugar</th><td><code>&lambda;x&hellip;z.M</code> for <code>&lambda;x.&hellip;.&lambda;z.M</code></td><td><code>function(x, &hellip;, z) { return M }</code> for <code>function(x) { return &hellip; return function(z) { return M } } }</code></td><td><code>function(x, &hellip;, z) M</code> for <code>function(x) &hellip; function(z) M</code></td></tr>
+    </table>
+
+    <h2>Example</h2>
 
     <dl>
       <dt>code1</dt>

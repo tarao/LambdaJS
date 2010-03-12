@@ -7,6 +7,7 @@
   -- manual mode (strategy which requires user to choose redex)
   -- abort button
   -- mark alpha conversion?
+  -- evaluation strategy selector
   - test in other browsers
 */
 
