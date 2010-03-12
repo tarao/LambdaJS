@@ -31,7 +31,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             while (true) {
                 try {
                     return self.sandbox.run(line);
-                } catch (e if e instanceof ReferenceError) {
+                } catch (e) {
                     if (/^([^\s]+) is not defined$/.test(e.message)) {
                         line = [
                             [ 'var', RegExp.$1, '=',
@@ -42,8 +42,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     } else {
                         throw { message: e.message };
                     }
-                } catch (e) {
-                    throw { message: e.message };
                 }
             }
         };
