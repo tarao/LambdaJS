@@ -119,7 +119,7 @@ if (typeof UI == 'undefined') var UI = {};
                     } else if (e.keyCode == 38 || // up || C-P
                                (e.ctrlKey && e.keyCode == 'P'.charCodeAt(0))) {
                         self.input.value = history.prev();
-                    } else if (e.keyCode == 40 ||
+                    } else if (e.keyCode == 40 || // down || C-N
                                (e.ctrlKey && e.keyCode == 'N'.charCodeAt(0))) {
                         self.input.value = history.next();
                     } else {
