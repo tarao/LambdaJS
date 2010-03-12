@@ -34,14 +34,39 @@ if (typeof UI == 'undefined') var UI = {};
             element.attachEvent(event, func);
         }
     };
+    ns.removeAllChildren = function(node) {
+        while (node.firstChild) node.removeChild(node.firstChild);
+    };
+    ns.History = function(hist, index) {
+        var self = { hist: hist||[], index: index||-1 };
+        self.prev = function() {
+            if (self.index < self.hist.length) self.index++;
+            return self.hist[self.index] || '';
+        };
+        self.next = function() {
+            if (self.index >= 0) self.index--;
+            return self.hist[self.index] || '';
+        };
+        self.push = function(item) {
+            if (item && self.hist[0] != item) self.hist.unshift(item);
+        };
+        self.clone = function(){ return ns.History(self.hist, -1); };
+        return self;
+    };
     with (ns) {
         ns.Console = function(elm) {
             var self = {
                 view: $new('ul'),
                 promptChar: '>',
+                history: new History(),
                 command: function(cmd){}
             };
             elm.appendChild(self.view);
+            self.clear = function(elm) {
+                removeAllChildren(self.view);
+                self.view.appendChild(elm);
+                if (self.input) self.input.focus();
+            };
             self.insert = function() {
                 var li = $new('li');
                 for (var i=0; i < arguments.length; i++) {
@@ -63,9 +88,11 @@ if (typeof UI == 'undefined') var UI = {};
                 self.input = $new('input');
                 self.input.value = '';
                 var li = self.insert(p, self.input);
+                var history = self.history.clone();
                 addEvent(self.input, 'onkeyup', function(e) {
                     if (e.keyCode == 13) { // Enter
                         var text = self.input.value;
+                        self.history.push(text);
                         self.view.removeChild(li);
                         self.insert(p, text).className = 'userinput';
                         try {
@@ -80,7 +107,26 @@ if (typeof UI == 'undefined') var UI = {};
                             self.err(e.message + meta);
                         }
                         self.prompt();
+                    } else {
+                        return;
                     }
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                addEvent(self.input, 'onkeydown', function(e) {
+                    if (e.ctrlKey && e.keyCode == 'L'.charCodeAt(0)) { // C-L
+                        self.clear(li);
+                    } else if (e.keyCode == 38 || // up || C-P
+                               (e.ctrlKey && e.keyCode == 'P'.charCodeAt(0))) {
+                        self.input.value = history.prev();
+                    } else if (e.keyCode == 40 ||
+                               (e.ctrlKey && e.keyCode == 'N'.charCodeAt(0))) {
+                        self.input.value = history.next();
+                    } else {
+                        return;
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
                 });
                 self.input.focus();
             };
