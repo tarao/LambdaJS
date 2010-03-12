@@ -1,6 +1,5 @@
 /*
   TODO:
-  - higher order function
   - \x.M syntax
   - interactive UI
   -- resizer on console
@@ -18,7 +17,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var window = null;
         var document = null;
         var alert = null;
-        this.fun = function(arg, f){ return new ns.Semantics.Abs(arg, f); };
+        this.fun = ns.Parser.makeFun;
         this.run = function(code){ with (this) return eval(code); };
     };
 
@@ -214,7 +213,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         }
     };
 
-    ns.Parser =  function() {
+    ns.Parser = function() {
         var self = {};
         self.parse = function(text) {
             return (text||'')
@@ -249,8 +248,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         arg = arg.replace(/^\s*/, '').replace(/\s*$/, '');
                         return "'"+arg+"'";
                     });
-                    // TODO: check if escaped.length == 1
-                    arr.push('fun('+escaped[0]+",",
+                    arr.push('fun(['+escaped.join(',')+"],",
                              'function(', args, ')',
                              self.parseExpr(body), ')');
                     str = '';
@@ -277,6 +275,19 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return str.length;
         };
         return self;
+    };
+    ns.Parser.makeFun = function(args, f, stack) {
+        stack = stack || [];
+        var arg = args.shift();
+        if (args.length == 0) {
+            return new ns.Semantics.Abs(arg, function(x) {
+                return f.apply(null, stack.concat([x]));
+            });
+        } else if (args.length > 0) {
+            return new ns.Semantics.Abs(arg, function(x) {
+                return ns.Parser.makeFun(args, f, stack.concat([x]));
+            });
+        }
     };
 
     ns.PP = {
