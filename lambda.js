@@ -124,7 +124,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     self.body = self.body.subst(fresh, self.arg);
                     self.arg = self.arg.subst(fresh, self.arg);
                 }
-                if (typeof v == 'undefined') v = self.arg;
                 self.body = self.body.subst(arg, v);
                 return self;
             };
@@ -142,9 +141,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = ns.Semantics.Base('App', arguments);
             self.subst = function(arg, v) {
                 self.fun = self.fun.subst(arg, v);
-                if (!self.arg.subst) {
-                    alert(self.arg);
-                }
                 self.arg = self.arg.subst(arg, v);
                 return self;
             };
@@ -191,7 +187,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 }
                 if (!self.reduced) {
                     self.reduced=true;
-                    return app.fun.subst(app.arg).body;
+                    return app.fun.body.subst(app.arg, app.fun.arg);
                 }
                 return app;
             };
@@ -246,7 +242,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                              self.parseExpr(str.substring(1, index)),
                              str.charAt(index));
                     str = str.substring(index+1);
-                } else if (/^function\(([^)]*)\)(.*)$/.test(str)) {
+                } else if (/^function\s*\(([^)]*)\)(.*)$/.test(str)) {
                     var args = RegExp.$1;
                     var body = RegExp.$2;
                     escaped = args.split(/,/).map(function(arg) {
