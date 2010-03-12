@@ -50,12 +50,11 @@ a:active
 
 body
 {
-  font-family: "Meiryo", "メイリオ", sans-serif;
+  font-family: sans-serif;
   margin: 1em;
   padding: 1em 2em;
   color: #404040;
   min-height: 640px;
-  background: white url("groundzero.png") no-repeat scroll right top;
 }
 
 h1,h2,h3,h4,h5,h6
