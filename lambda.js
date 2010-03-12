@@ -207,6 +207,12 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 abs.body = abs.body.reduce(self);
                 return abs;
             };
+            var reduceApp = self.reduceApp;
+            self.reduceApp = function(app) {
+                app = reduceApp(app);
+                if (app.type == 'App') app.arg = app.arg.reduce(self);
+                return app;
+            };
             return self;
         }
     };
