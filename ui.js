@@ -90,7 +90,8 @@ if (typeof UI == 'undefined') var UI = {};
                 var li = self.insert(p, self.input);
                 var history = self.history.clone();
                 addEvent(self.input, 'onkeyup', function(e) {
-                    if (e.keyCode == 13) { // Enter
+                    switch (e.keyCode) {
+                    case 13: // Enter
                         var text = self.input.value;
                         self.history.push(text);
                         self.view.removeChild(li);
@@ -107,22 +108,27 @@ if (typeof UI == 'undefined') var UI = {};
                             self.err(e.message + meta);
                         }
                         self.prompt();
-                    } else {
+                        break;
+                    default:
                         return;
                     }
                     e.preventDefault();
                     e.stopPropagation();
                 });
                 addEvent(self.input, 'onkeydown', function(e) {
-                    if (e.ctrlKey && e.keyCode == 'L'.charCodeAt(0)) { // C-L
+                    switch (e.keyCode) {
+                    case 'L'.charCodeAt(0): if (!e.ctrlKey) return; // C-L
                         self.clear(li);
-                    } else if (e.keyCode == 38 || // up || C-P
-                               (e.ctrlKey && e.keyCode == 'P'.charCodeAt(0))) {
+                        break;
+                    case 'P'.charCodeAt(0): if (!e.ctrlKey) return; // C-P
+                    case 38: // up
                         self.input.value = history.prev();
-                    } else if (e.keyCode == 40 || // down || C-N
-                               (e.ctrlKey && e.keyCode == 'N'.charCodeAt(0))) {
+                        break;
+                    case 'N'.charCodeAt(0): if (!e.ctrlKey) return; // C-N
+                    case 40: // down
                         self.input.value = history.next();
-                    } else {
+                        break;
+                    default:
                         return;
                     }
                     e.preventDefault();
