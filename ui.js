@@ -36,6 +36,18 @@ if (typeof UI == 'undefined') var UI = {};
             element.attachEvent(event, func);
         }
     };
+    ns.insertText = function(node, text) {
+        var start = node.selectionStart;
+        var end = node.selectionEnd;
+        if (typeof start == 'number' && typeof end == 'number') {
+            var before = node.value.substring(0, start);
+            var after = node.value.substring(end);
+            node.value = before + text + after;
+            node.selectionStart = node.selectionEnd = start+text.length;
+        } else {
+            node.value += text;
+        }
+    };
     ns.removeAllChildren = function(node) {
         while (node.firstChild) node.removeChild(node.firstChild);
     };
@@ -131,7 +143,7 @@ if (typeof UI == 'undefined') var UI = {};
                         self.input.value = history.next();
                         break;
                     case 220: // '\\'
-                        self.input.value += '\u03bb';
+                        insertText(self.input, '\u03bb');
                         break;
                     default:
                         return;
