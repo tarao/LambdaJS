@@ -50,15 +50,10 @@
   margin-right: .5em;
 }
 
-#syntax
-{
-  border-collapse: collapse;
-}
-
 #syntax th, #syntax td
 {
+  background-color: #eeeeee;
   padding: .5em;
-  border: 1px #999999 solid;
 }
 
 #syntax th, #syntax th a
