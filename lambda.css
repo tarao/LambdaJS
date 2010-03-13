@@ -30,6 +30,7 @@
   display: inline;
   border-style: none;
   background-color: #181818;
+  ime-mode: disabled;
 }
 
 .console ul li.userinput
