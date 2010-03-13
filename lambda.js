@@ -110,13 +110,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         Abs: function(arg, func) {
             var self = ns.Semantics.Base('Abs', arguments);
-            self.subst = function(arg, v) {     // (\x.M)[v:=N]
-                if (v == self.arg) return self; // (\x.M)[x:=N] = \x.M
+            self.subst = function(arg, v) {         // (\x.M)[v:=N]
+                if (v.v == self.arg.v) return self; // (\x.M)[x:=N] = \x.M
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
-                if (fv1[v||self.arg] && fv2[self.arg]) {
+                if (fv1[v.v||self.arg.v] && fv2[self.arg.v]) {
                     // alpha conversion
-                    fv2[v||self.arg] = true;
+                    fv2[v.v||self.arg.v] = true;
                     var fresh = ns.Util.freshVar(fv2, 'a');
                     self.body = self.body.subst(fresh, self.arg);
                     self.arg = self.arg.subst(fresh, self.arg);
@@ -126,7 +126,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.fv = function() {
                 var fv = self.body.fv();
-                fv[self.arg] = false;
+                fv[self.arg.v] = false;
                 return fv;
             };
             self.toString = function() {
