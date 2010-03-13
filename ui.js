@@ -92,7 +92,7 @@ if (typeof UI == 'undefined') var UI = {};
                 var li = self.insert(p, self.input);
                 var history = self.history.clone();
                 addEvent(self.input, 'onkeyup', function(e) {
-                    switch (e.keyCode) {
+                    switch (e.charCode || e.keyCode) {
                     case 13: // Enter
                         var text = self.input.value;
                         self.history.push(text);
@@ -118,7 +118,7 @@ if (typeof UI == 'undefined') var UI = {};
                     e.stopPropagation();
                 });
                 addEvent(self.input, 'onkeydown', function(e) {
-                    switch (e.keyCode) {
+                    switch (e.charCode || e.keyCode) {
                     case 'L'.charCodeAt(0): if (!e.ctrlKey) return; // C-L
                         self.clear(li);
                         break;
@@ -129,6 +129,9 @@ if (typeof UI == 'undefined') var UI = {};
                     case 'N'.charCodeAt(0): if (!e.ctrlKey) return; // C-N
                     case 40: // down
                         self.input.value = history.next();
+                        break;
+                    case 220: // '\\'
+                        self.input.value += '\u03bb';
                         break;
                     default:
                         return;

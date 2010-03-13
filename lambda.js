@@ -1,6 +1,5 @@
 /*
   TODO:
-  - \x.M syntax
   - interactive UI
   -- resizer on console
   -- mark redex
@@ -236,15 +235,17 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             }
             return line.length ? self.parseExpr(line)+';' : '';
         };
-        self.parseExpr = function(str) {
+        self.parseExpr = function(str, nest) {
             var arr = [];
+            var app = false;
+            var rec = function(str){ return self.parseExpr(str, true); };
             while (str.length) {
                 var first = str.charAt(0);
                 if (/[({[]/.test(first)) {
                     var index = self.matchParen(str);
-                    arr.push(first,
-                             self.parseExpr(str.substring(1, index)),
-                             str.charAt(index));
+                    arr.push([
+                        first, rec(str.substring(1, index)), str.charAt(index)
+                    ].join(''));
                     str = str.substring(index+1);
                 } else if (/^function\s*\(([^)]*)\)(.*)$/.test(str)) {
                     var args = RegExp.$1;
@@ -253,13 +254,39 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         arg = arg.replace(/^\s*/, '').replace(/\s*$/, '');
                         return "'"+arg+"'";
                     });
-                    arr.push('fun(['+escaped.join(',')+"],",
-                             'function(', args, ')',
-                             self.parseExpr(body), ')');
+                    arr.push([
+                        'fun(['+escaped.join(',')+"],",
+                        'function(', args, ') ',
+                        rec(body), ')'
+                    ].join(''));
                     str = '';
-                } else {
-                    arr.push(first);
-                    str = str.substring(1);
+                } else if (/^return([^\w].*)$/.test(str)) {
+                    arr.push([
+                        'return', rec(RegExp.$1)
+                    ].join(' '));
+                    str = '';
+                } else if (/^[\u03bb\\](\w+)\.(.*)$/.test(str)) {
+                    str = [
+                        'function(', RegExp.$1.split('').join(','), '){',
+                        'return ', RegExp.$2, '}'
+                    ].join('');
+                } else if (/^(\s+)(.*)$/.test(str)) {
+                    arr.push(RegExp.$1);
+                    str = RegExp.$2;
+                    if (nest && arr.length > 0) app = true;
+                    continue;
+                } else if (/^(\S+)(.*)$/.test(str)) {
+                    arr.push(RegExp.$1);
+                    str = RegExp.$2;
+                }
+                if (app) {
+                    if (arr[arr.length-3] && arr[arr.length-1]) {
+                        var arg = arr.pop();
+                        arr.pop();
+                        var fun = arr.pop();
+                        arr.push(fun+'('+arg+')');
+                        app = false;
+                    }
                 }
             }
             return arr.join('');
