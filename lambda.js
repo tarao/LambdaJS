@@ -173,7 +173,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             // reduce by visitor pattern
             self.reduce = function(exp) {
                 self.reduced = false;
-                return exp.reduce(this);
+                return self._reduce(exp);
+            };
+            self._reduce = function(exp) {
+                return ns.Util.promote(exp).reduce(self);
             };
             self.reduceAbs = function(abs){ return abs; };
             self.reduceApp = function(app) {
