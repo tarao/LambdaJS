@@ -168,7 +168,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Strategy = {
-        Generic: function() {
+        CallByName: function() {
             var self = { reduced: false };
             // reduce by visitor pattern
             self.reduce = function(exp) {
@@ -192,17 +192,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             self.reduceVar = function(v){ return v; };
             return self;
         },
-        CallByName: function() {
-            var self = new ns.Strategy.Generic();
-            return self;
-        },
         CallByValue: function() {
-            var self = new ns.Strategy.Generic();
+            var self = new ns.Strategy.CallByName();
             self.reduceArg = function(arg){ return arg.reduce(self); };
             return self;
         },
         NormalOrder: function() {
-            var self = new ns.Strategy.Generic();
+            var self = new ns.Strategy.CallByName();
             self.reduceAbs = function(abs) {
                 abs.body = abs.body.reduce(self);
                 return abs;
