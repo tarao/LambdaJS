@@ -52,13 +52,19 @@
 
 #syntax th, #syntax td
 {
-  background-color: #eeeeee;
   padding: .5em;
 }
 
 #syntax th, #syntax th a
 {
+  background-color: #999999;
+  color: #ffffff;
   font-weight: bold;
+}
+
+#syntax td
+{
+  background-color: #eeeeee;
 }
 
 #syntax code
