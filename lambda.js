@@ -110,19 +110,25 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         Abs: function(arg, func) {
             var self = ns.Semantics.Base('Abs', arguments);
+            self.clone = function() {
+                return new ns.Semantics.Abs(self.arg.clone(), function() {
+                    return self.body.clone();
+                });
+            };
             self.subst = function(arg, v) {         // (\x.M)[v:=N]
                 if (v.v == self.arg.v) return self; // (\x.M)[x:=N] = \x.M
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
+                var abs = self.clone();
                 if (fv1[v.v||self.arg.v] && fv2[self.arg.v]) {
                     // alpha conversion
                     fv2[v.v||self.arg.v] = true;
                     var fresh = ns.Util.freshVar(fv2, 'a');
-                    self.body = self.body.subst(fresh, self.arg);
-                    self.arg = self.arg.subst(fresh, self.arg);
+                    abs.body = abs.body.subst(fresh, abs.arg);
+                    abs.arg = abs.arg.subst(fresh, abs.arg);
                 }
-                self.body = self.body.subst(arg, v);
-                return self;
+                abs.body = abs.body.subst(arg, v);
+                return abs;
             };
             self.fv = function() {
                 var fv = self.body.fv();
@@ -138,10 +144,15 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         App: function(func, arg) {
             var self = ns.Semantics.Base('App', arguments);
+            self.clone = function() {
+                return new ns.Semantics.App(self.fun.clone(),
+                                            self.arg.clone());
+            };
             self.subst = function(arg, v) {
-                self.fun = self.fun.subst(arg, v);
-                self.arg = self.arg.subst(arg, v);
-                return self;
+                var app = self.clone();
+                app.fun = app.fun.subst(arg, v);
+                app.arg = app.arg.subst(arg, v);
+                return app;
             };
             self.fv = function() {
                 var fv1 = self.fun.fv();
@@ -158,6 +169,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         Var: function(v) {
             var self = ns.Semantics.Base('Var', arguments);
+            self.clone = function() {
+                return new ns.Semantics.Var(self.v+'');
+            };
             self.subst = function(arg, v) {
                 return self.v == v.v ?  arg : self;
             };

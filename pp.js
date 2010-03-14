@@ -15,12 +15,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     var klass = 'application';
                     if (app.marked) {
                         klass = [ klass, 'marked' ].join(' ');
-                        var bound = new ns.Semantics.Var(app.fun.arg.v);
+                        var fun = app.fun.clone();
+                        var bound = app.fun.arg.clone();
                         bound.bound = true;
-                        var body = app.fun.body.subst(bound, app.fun.arg);
-                        fun = new ns.Semantics.Abs(app.fun.arg, function() {
-                            return body
-                        });
+                        fun.body = fun.body.subst(bound, fun.arg);
                     }
                     var span = $new('span', { klass: klass });
                     fun = self.pp(fun);
@@ -36,7 +34,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         appendParen(paren, arg);
                         span.appendChild(paren);
                     } else {
-                        arg.className = 'argument';
+                        arg.className += ' argument';
                         span.appendChild(arg);
                     }
                     return span;
