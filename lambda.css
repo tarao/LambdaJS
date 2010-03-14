@@ -74,3 +74,8 @@
   background-color: inherit;
   overflow: visible;
 }
+
+#syntax code var
+{
+  font-style: italic;
+}

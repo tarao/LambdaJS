@@ -14,7 +14,7 @@ function run(id) {
         if (typeof exp == 'undefined') break;
 
         var st = new LambdaJS.Strategy.CallByName();
-        exp = exp.reduce(st);
+        exp = st.reduce(exp);
         if (!st.reduced) break;
     }
 
@@ -27,7 +27,7 @@ function run(id) {
         if (typeof exp == 'undefined') break;
 
         var st = new LambdaJS.Strategy.CallByValue();
-        exp = exp.reduce(st);
+        exp = st.reduce(exp);
         if (!st.reduced) break;
     }
 
@@ -40,7 +40,7 @@ function run(id) {
         if (typeof exp == 'undefined') break;
 
         var st = new LambdaJS.Strategy.NormalOrder();
-        exp = exp.reduce(st);
+        exp = st.reduce(exp);
         if (!st.reduced) break;
     }
 };
