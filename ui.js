@@ -68,18 +68,19 @@ if (typeof UI == 'undefined') var UI = {};
         return self;
     };
     with (ns) {
-        ns.Console = function(elm) {
+        ns.Console = function(elm, cmd) {
             var self = {
                 view: $new('ul'),
                 promptChar: '>',
                 history: new History(),
-                command: function(cmd){}
+                command: cmd || function(){}
             };
             elm.appendChild(self.view);
             self.clear = function(elm) {
                 removeAllChildren(self.view);
-                self.view.appendChild(elm);
+                if (elm) self.view.appendChild(elm);
                 if (self.input) self.input.focus();
+                return self;
             };
             self.insert = function() {
                 var li = $new('li');
@@ -92,7 +93,9 @@ if (typeof UI == 'undefined') var UI = {};
                 return li;
             };
             self.err = function(message) {
-                self.insert(message).className = 'error';
+                var li = self.insert(message);
+                li.className = 'error';
+                return li;
             };
             self.prompt = function() {
                 var p = $new('span', {
@@ -152,8 +155,8 @@ if (typeof UI == 'undefined') var UI = {};
                     e.stopPropagation();
                 });
                 self.input.focus();
+                return self;
             };
-            self.prompt();
             return self;
         };
     }

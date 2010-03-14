@@ -106,9 +106,8 @@ function setup(id) {
     init(); // FIXME
 
     var elm = document.getElementById(id);
-    var console = new UI.Console(elm);
     var env = new LambdaJS.Env();
-    console.command = function(cmd) {
+    var console = new UI.Console(elm, function(cmd) {
         var exp = env.evalLine(cmd);
         if (exp) {
             var st = new LambdaJS.Strategy.NormalOrder();
@@ -117,5 +116,5 @@ function setup(id) {
                 exp = st.reduce(exp);
             } while (st.reduced)
         }
-    };
+    }).prompt();
 };
