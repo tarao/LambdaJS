@@ -2,7 +2,6 @@
   TODO:
   - interactive UI
   -- resizer on console
-  -- mark redex
   -- manual mode (strategy which requires user to choose redex)
   -- abort button
   -- mark alpha conversion?
@@ -101,7 +100,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     ns.Semantics = {
         Base: function(type, args) {
             var self =  ns.Ast(type, args);
-            [ 'mark', 'reduceMarked' ].forEach(function(m) {
+            [ 'mark', 'reduceMarked', 'pp' ].forEach(function(m) {
                 self[m] = function(visitor) {
                     var id = function(x){ return x; };
                     return (visitor[m+self.type]||id)(self);
@@ -160,7 +159,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         Var: function(v) {
             var self = ns.Semantics.Base('Var', arguments);
             self.subst = function(arg, v) {
-                return self.v == v ?  arg : self;
+                return self.v == v.v ?  arg : self;
             };
             self.fv = function() {
                 var fv = {};

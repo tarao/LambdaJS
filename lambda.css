@@ -43,6 +43,19 @@
   color: #ff0000;
 }
 
+.console .marked > .abstraction > .lambda,
+.console .marked > .abstraction > .binding,
+.console .marked .bound
+{
+  color: #00cccc;
+}
+
+.console .marked > .argument,
+.console .marked > .argument *
+{
+  text-decoration: underline;
+}
+
 .prompt
 {
   color: #999999;

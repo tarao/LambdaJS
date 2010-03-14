@@ -55,7 +55,8 @@ function init() {
     }
 };
 
-if (typeof Setup == 'undefined') var Setup = {};
+if (typeof LambdaJS == 'undefined') var LambdaJS = {};
+if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
 
 (function(ns) {
     ns.testJS18 = function() {
@@ -96,25 +97,88 @@ if (typeof Setup == 'undefined') var Setup = {};
             }
         }
     };
-})(Setup);
+    ns.EvalPrint = function(console, exp, strategy, pp, cont, timeout) {
+        var self = {
+            console: console,
+            exp: exp, strategy: strategy,
+            pp: pp,
+            cont: cont,
+            timeout: timeout
+        };
+        self.mark = function() {
+            window.setTimeout(function(){ self._mark(); }, self.timeout);
+        };
+        self.reduce = function() {
+            window.setTimeout(function(){ self._reduce(); }, self.timeout);
+        };
+        self.sandbox = function(fun, cont) {
+            try {
+                if (fun()) return;
+            } catch (e) {
+                var meta = [];
+                [ 'fileName', 'lineNumber' ].forEach(function(x) {
+                    if (/^([a-z]+)/.test(x) && e[x])
+                        meta.push(RegExp.$1 + ': ' + e[x]);
+                });
+                meta = meta.length ? ' ['+meta.join(', ')+']' : '';
+                self.console.err(e.message + meta);
+            }
+            cont();
+        };
+        self._mark = function() {
+            self.sandbox(function() {
+                self.exp = strategy.mark(self.exp);
+                if (self.strategy.marked) {
+                    UI.replaceLastChild(self.console.view.lastChild,
+                                        self.pp.pp(self.exp));
+                    self.reduce();
+                    return true;
+                }
+            }, self.cont);
+        };
+        self._reduce = function() {
+            self.sandbox(function() {
+                self.exp = strategy.reduceMarked(self.exp);
+                if (self.strategy.reduced) {
+                    var red = UI.$new('span', {
+                        klass: 'reduce',
+                        child: '\u2192'
+                    });
+                    self.console.insert(red, self.pp.pp(self.exp));
+                    self.mark();
+                }
+                return true;
+            }, self.cont);
+        };
+        return self;
+    };
+})(LambdaJS.App);
 
 function setup(id) {
-    // hide unsupported syntax
-    Setup.hideSyntax(document.getElementById('syntax'),
-                     Setup.isJS18Enabled() ? 'javascript' : 'javascript18');
+    with (LambdaJS.App) {
+        // hide unsupported syntax
+        hideSyntax(document.getElementById('syntax'),
+                   isJS18Enabled() ? 'javascript' : 'javascript18');
 
-    init(); // FIXME
+        init(); // FIXME
 
-    var elm = document.getElementById(id);
-    var env = new LambdaJS.Env();
-    var console = new UI.Console(elm, function(cmd) {
-        var exp = env.evalLine(cmd);
-        if (exp) {
-            var st = new LambdaJS.Strategy.NormalOrder();
-            do {
-                console.insert(exp.toString());
-                exp = st.reduce(exp);
-            } while (st.reduced)
-        }
-    }).prompt();
+        // REPL
+        var elm = document.getElementById(id);
+        var env = new LambdaJS.Env();
+        var console = new UI.Console(elm, function(cmd) {
+            var exp = env.evalLine(cmd);
+            if (exp) {
+                var st = new LambdaJS.Strategy.NormalOrder();
+                var pp = new LambdaJS.PP.Lambda();
+                console.insert(pp.pp(exp));
+
+                var ep = new EvalPrint(console, exp, st, pp, function() {
+                    console.prompt();
+                }, 500); // FIXME
+                ep.mark();
+            } else {
+                console.prompt();
+            }
+        }).prompt();
+    }
 };

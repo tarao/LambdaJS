@@ -18,14 +18,16 @@ if (typeof UI == 'undefined') var UI = {};
         if (args.child) {
             if (typeof args.child != 'Array') args.child = [ args.child ];
             for (var i=0; i < args.child.length; i++) {
-                var child = args.child[i];
-                if (!(child instanceof Node)) child = ns.$text(child);
+                var child = ns.$node(args.child[i]);
                 elm.appendChild(child);
             }
         }
         return elm;
     };
     ns.$text = function(str){ return ns.doc.createTextNode(str); };
+    ns.$node = function(node) {
+        return node instanceof Node ? node : ns.$text(node);
+    }
     ns.addEvent = function(element, event, func) {
         if (element.addEventListener) {
             if (event.indexOf('on') == 0) {
@@ -50,6 +52,11 @@ if (typeof UI == 'undefined') var UI = {};
     };
     ns.removeAllChildren = function(node) {
         while (node.firstChild) node.removeChild(node.firstChild);
+    };
+    ns.replaceLastChild = function(node, child) {
+        var last = node.lastChild;
+        if (last) node.removeChild(last);
+        node.appendChild(child);
     };
     ns.History = function(hist, index) {
         var self = { hist: hist||[], index: index||-1 };
@@ -85,8 +92,7 @@ if (typeof UI == 'undefined') var UI = {};
             self.insert = function() {
                 var li = $new('li');
                 for (var i=0; i < arguments.length; i++) {
-                    var elm = arguments[i];
-                    if (!(elm instanceof Node)) elm = $text(elm);
+                    var elm = $node(arguments[i]);
                     li.appendChild(elm);
                 }
                 self.view.appendChild(li);
@@ -113,18 +119,7 @@ if (typeof UI == 'undefined') var UI = {};
                         self.history.push(text);
                         self.view.removeChild(li);
                         self.insert(p, text).className = 'userinput';
-                        try {
-                            self.command(text);
-                        } catch (e) {
-                            var meta = [];
-                            [ 'fileName', 'lineNumber' ].forEach(function(x) {
-                                if (/^([a-z]+)/.test(x) && e[x])
-                                    meta.push(RegExp.$1 + ': ' + e[x]);
-                            });
-                            meta = meta.length ? ' ['+meta.join(', ')+']' : '';
-                            self.err(e.message + meta);
-                        }
-                        self.prompt();
+                        self.command(text);
                         break;
                     default:
                         return;
