@@ -101,9 +101,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     ns.Semantics = {
         Base: function(type, args) {
             var self =  ns.Ast(type, args);
-            [ 'reduce' ].forEach(function(m) {
+            [ 'mark', 'reduceMarked' ].forEach(function(m) {
                 self[m] = function(visitor) {
-                    return visitor[m+self.type](self);
+                    var id = function(x){ return x; };
+                    return (visitor[m+self.type]||id)(self);
                 }
             });
             return self;
@@ -130,7 +131,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return fv;
             };
             self.toString = function() {
-                return [ 'Fun(', self.arg, ') ', self.body, ].join('');
+                return self.marked
+                    ? [ 'FUN[', self.arg, '] ', self.body, ].join('')
+                    : [ 'Fun(', self.arg, ') ', self.body, ].join('');
             };
             return self;
         },
@@ -148,7 +151,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return fv2;
             };
             self.toString = function() {
-                return [ 'App(', self.fun, ', ', self.arg, ')' ].join('');
+                return self.marked
+                    ? [ 'APP[', self.fun, ', ', self.arg, ']' ].join('')
+                    : [ 'App(', self.fun, ', ', self.arg, ')' ].join('');
             };
             return self;
         },
@@ -162,7 +167,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 fv[self.v] = true;
                 return fv;
             };
-            self.toString = function(){ return self.v; };
+            self.toString = function() {
+                return self.marked ? self.v.toUpperCase() : self.v;
+            };
             return self;
         }
     };
@@ -172,44 +179,68 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = { reduced: false };
             // reduce by visitor pattern
             self.reduce = function(exp) {
-                self.reduced = false;
-                return self._reduce(exp);
+                return self.reduceMarked(self.mark(exp));
             };
-            self._reduce = function(exp) {
-                return ns.Util.promote(exp).reduce(self);
+            self.mark = function(exp) {
+                self.marked = false;
+                return self._mark(exp);
             };
-            self.reduceAbs = function(abs){ return abs; };
-            self.reduceApp = function(app) {
-                app.fun = app.fun.reduce(self);
+            self._mark = function(exp) {
+                return ns.Util.promote(exp).mark(self);
+            };
+            self.markApp = function(app) {
+                app.fun = self._mark(app.fun);
                 if (app.fun.type != 'Abs') return app;
-                if (!self.reduced) {
-                    app.arg = self.reduceArg(app.arg);
+                if (!self.marked) {
+                    app.arg = self.markArg(app.arg);
                 }
-                if (!self.reduced) {
-                    self.reduced=true;
+                if (!self.marked) {
+                    self.marked = true;
+                    app.marked = true;
+                }
+                return app;
+            };
+            self.markArg = function(arg){ return arg; };
+            self.reduceMarked = function(exp) {
+                self.reduced = false;
+                return self._reduceMarked(exp);
+            };
+            self._reduceMarked = function(exp) {
+                return ns.Util.promote(exp).reduceMarked(self);
+            };
+            self.reduceMarkedAbs = function(abs) {
+                abs.body = self._reduceMarked(abs.body);
+                return abs;
+            };
+            self.reduceMarkedApp = function(app) {
+                app.fun = self._reduceMarked(app.fun);
+                app.arg = self._reduceMarked(app.arg);
+                if (app.marked) {
+                    app.marked = false;
+                    self.reduced = true;
                     return app.fun.body.subst(app.arg, app.fun.arg);
                 }
                 return app;
             };
-            self.reduceArg = function(arg){ return arg; };
-            self.reduceVar = function(v){ return v; };
             return self;
         },
         CallByValue: function() {
             var self = new ns.Strategy.CallByName();
-            self.reduceArg = function(arg){ return arg.reduce(self); };
+            self.markArg = function(arg){ return self._mark(arg); };
             return self;
         },
         NormalOrder: function() {
             var self = new ns.Strategy.CallByName();
-            self.reduceAbs = function(abs) {
-                abs.body = abs.body.reduce(self);
+            self.markAbs = function(abs) {
+                abs.body = self._mark(abs.body);
                 return abs;
             };
-            var reduceApp = self.reduceApp;
-            self.reduceApp = function(app) {
-                app = reduceApp(app);
-                if (app.type == 'App') app.arg = app.arg.reduce(self);
+            var markApp = self.markApp;
+            self.markApp = function(app) {
+                app = markApp(app);
+                if (!self.marked && app.type == 'App') {
+                    app.arg = self._mark(app.arg);
+                }
                 return app;
             };
             return self;
@@ -318,13 +349,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return new ns.Semantics.Abs(arg, function(x) {
                 return ns.Parser.makeFun(args, f, stack.concat([x]));
             });
-        }
-    };
-
-    ns.PP = {
-        JS: function() {
-        },
-        Lambda: function() {
         }
     };
 })(LambdaJS);
