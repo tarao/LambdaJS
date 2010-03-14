@@ -45,7 +45,7 @@ function run(id) {
     }
 };
 
-function init() {
+function initExample() {
     var links = document.getElementsByTagName('a');
     for (var i=0; i < links.length; i++) {
         if (links[i].id.match(/^run-.+/)) {
@@ -154,13 +154,13 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
     };
 })(LambdaJS.App);
 
-function setup(id) {
+function init(id) {
     with (LambdaJS.App) {
         // hide unsupported syntax
         hideSyntax(document.getElementById('syntax'),
                    isJS18Enabled() ? 'javascript' : 'javascript18');
 
-        init(); // FIXME
+        initExample(); // FIXME
 
         // REPL
         var elm = document.getElementById(id);
