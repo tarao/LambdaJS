@@ -97,20 +97,32 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             }
         }
     };
-    ns.EvalPrint = function(console, exp, strategy, pp, cont, timeout) {
+    ns.Repl = function(elm) {
         var self = {
-            console: console,
-            exp: exp, strategy: strategy,
-            pp: pp,
-            cont: cont,
-            timeout: timeout
+            getTimeout: function(){ return 500; },
+            getStrategy: function() {
+                return new LambdaJS.Strategy.NormalOrder();
+            },
+            getPP: function() {
+                return new LambdaJS.PP.Lambda();
+            },
+            cont: function(){ self.console.prompt(); },
+            env: new LambdaJS.Env()
         };
-        self.mark = function() {
-            window.setTimeout(function(){ self._mark(); }, self.timeout);
-        };
-        self.reduce = function() {
-            window.setTimeout(function(){ self._reduce(); }, self.timeout);
-        };
+        self.console = new UI.Console(elm, function(cmd) {
+            self.sandbox(function() {
+                self.exp = self.env.evalLine(cmd);
+                if (self.exp) {
+                    self.strategy = self.getStrategy();
+                    self.pp = self.getPP();
+                    self.console.insert(self.pp.pp(self.exp));
+                    self.mark();
+                } else {
+                    self.cont();
+                }
+                return true;
+            }, self.cont);
+        });
         self.sandbox = function(fun, cont) {
             try {
                 if (fun()) return;
@@ -125,12 +137,20 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             }
             cont();
         };
+        self.mark = function() {
+            setTimeout(function(){ self._mark(); }, self.getTimeout());
+        };
+        self.reduce = function() {
+            setTimeout(function(){ self._reduce(); }, self.getTimeout());
+        };
         self._mark = function() {
             self.sandbox(function() {
+                var strategy = self.getStrategy();
+                var pp = self.getPP();
                 self.exp = strategy.mark(self.exp);
-                if (self.strategy.marked) {
+                if (strategy.marked) {
                     UI.replaceLastChild(self.console.view.lastChild,
-                                        self.pp.pp(self.exp));
+                                        pp.pp(self.exp));
                     self.reduce();
                     return true;
                 }
@@ -138,18 +158,21 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         };
         self._reduce = function() {
             self.sandbox(function() {
+                var strategy = self.getStrategy();
+                var pp = self.getPP();
                 self.exp = strategy.reduceMarked(self.exp);
-                if (self.strategy.reduced) {
+                if (strategy.reduced) {
                     var red = UI.$new('span', {
                         klass: 'reduce',
                         child: '\u2192'
                     });
-                    self.console.insert(red, self.pp.pp(self.exp));
+                    self.console.insert(red, pp.pp(self.exp));
                     self.mark();
                 }
                 return true;
             }, self.cont);
         };
+        self.cont();
         return self;
     };
 })(LambdaJS.App);
@@ -164,21 +187,6 @@ function init(id) {
 
         // REPL
         var elm = document.getElementById(id);
-        var env = new LambdaJS.Env();
-        var console = new UI.Console(elm, function(cmd) {
-            var exp = env.evalLine(cmd);
-            if (exp) {
-                var st = new LambdaJS.Strategy.NormalOrder();
-                var pp = new LambdaJS.PP.Lambda();
-                console.insert(pp.pp(exp));
-
-                var ep = new EvalPrint(console, exp, st, pp, function() {
-                    console.prompt();
-                }, 500); // FIXME
-                ep.mark();
-            } else {
-                console.prompt();
-            }
-        }).prompt();
+        var repl = new Repl(elm);
     }
 };
