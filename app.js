@@ -114,8 +114,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 self.exp = self.env.evalLine(cmd);
                 if (self.exp) {
                     self.strategy = self.getStrategy();
-                    self.pp = self.getPP();
-                    self.console.insert(self.pp.pp(self.exp));
+                    self.console.insert(self.getPP().pp(self.exp));
                     self.mark();
                 } else {
                     self.cont();
@@ -138,36 +137,32 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             cont();
         };
         self.mark = function() {
-            setTimeout(function(){ self._mark(); }, self.getTimeout());
-        };
-        self.reduce = function() {
-            setTimeout(function(){ self._reduce(); }, self.getTimeout());
-        };
-        self._mark = function() {
             self.sandbox(function() {
                 var strategy = self.getStrategy();
-                var pp = self.getPP();
                 self.exp = strategy.mark(self.exp);
                 if (strategy.marked) {
-                    UI.replaceLastChild(self.console.view.lastChild,
-                                        pp.pp(self.exp));
-                    self.reduce();
+                    setTimeout(function() {
+                        UI.replaceLastChild(self.console.view.lastChild,
+                                            self.getPP().pp(self.exp));
+                        self.reduce();
+                    }, self.getTimeout());
                     return true;
                 }
             }, self.cont);
         };
-        self._reduce = function() {
+        self.reduce = function() {
             self.sandbox(function() {
                 var strategy = self.getStrategy();
-                var pp = self.getPP();
                 self.exp = strategy.reduceMarked(self.exp);
                 if (strategy.reduced) {
                     var red = UI.$new('span', {
                         klass: 'reduce',
                         child: '\u2192'
                     });
-                    self.console.insert(red, pp.pp(self.exp));
-                    self.mark();
+                    setTimeout(function() {
+                        self.console.insert(red, self.getPP().pp(self.exp));
+                        self.mark();
+                    }, self.getTimeout());
                 }
                 return true;
             }, self.cont);
