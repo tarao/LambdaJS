@@ -134,11 +134,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 fv[self.arg.v] = false;
                 return fv;
             };
-            self.toString = function() {
-                return self.marked
-                    ? [ 'FUN[', self.arg, '] ', self.body, ].join('')
-                    : [ 'Fun(', self.arg, ') ', self.body, ].join('');
-            };
             return self;
         },
         App: function(func, arg) {
@@ -159,11 +154,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 for (var p in fv1) fv2[p] = fv2[p] || fv1[p];
                 return fv2;
             };
-            self.toString = function() {
-                return self.marked
-                    ? [ 'APP[', self.fun, ', ', self.arg, ']' ].join('')
-                    : [ 'App(', self.fun, ', ', self.arg, ')' ].join('');
-            };
             return self;
         },
         Var: function(v) {
@@ -178,9 +168,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var fv = {};
                 fv[self.v] = true;
                 return fv;
-            };
-            self.toString = function() {
-                return self.marked ? self.v.toUpperCase() : self.v;
             };
             return self;
         }
@@ -199,7 +186,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 app = app.clone();
                 if (app.fun.type == 'Abs') {
                     self.marked = true;
-                    app.marked = true;
+                    app.redex = true;
                 } else {
                     app.fun = self._mark(app.fun);
                     if (!self.marked) app.arg = self._mark(app.arg);
@@ -230,7 +217,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 }
                 if (!self.marked) {
                     self.marked = true;
-                    app.marked = true;
+                    app.redex = true;
                 }
                 return app;
             };
@@ -249,8 +236,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             self.reduceMarkedApp = function(app) {
                 app.fun = self._reduceMarked(app.fun);
                 app.arg = self._reduceMarked(app.arg);
-                if (app.marked) {
-                    app.marked = false;
+                if (app.redex) {
                     self.reduced = true;
                     return app.fun.body.subst(app.arg, app.fun.arg);
                 }
