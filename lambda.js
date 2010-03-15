@@ -5,7 +5,6 @@
   -- manual mode (strategy which requires user to choose redex)
   -- abort button
   -- mark alpha conversion?
-  -- evaluation strategy selector
   - test in other browsers
 */
 
@@ -188,9 +187,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Strategy = {
-        NormalOrder: function() {
+        Leftmost: function() {
             var self = new ns.Strategy.CallByName();
-            self.name = 'normal order';
+            self.name = 'leftmost';
             self.markAbs = function(abs) {
                 abs = abs.clone();
                 abs.body = self._mark(abs.body);

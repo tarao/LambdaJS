@@ -39,7 +39,7 @@ function run(id) {
         code.appendChild(document.createTextNode((exp||'').toString()));
         if (typeof exp == 'undefined') break;
 
-        var st = new LambdaJS.Strategy.NormalOrder();
+        var st = new LambdaJS.Strategy.Leftmost();
         exp = st.reduce(exp);
         if (!st.reduced) break;
     }
@@ -101,7 +101,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         var self = {
             getTimeout: function(){ return 500; },
             getStrategy: function() {
-                return new LambdaJS.Strategy.NormalOrder();
+                return new LambdaJS.Strategy.Leftmost();
             },
             getPP: function() {
                 return new LambdaJS.PP.Lambda();
