@@ -188,9 +188,30 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Strategy = {
+        NormalOrder: function() {
+            var self = new ns.Strategy.CallByName();
+            self.name = 'normal order';
+            self.markAbs = function(abs) {
+                abs = abs.clone();
+                abs.body = self._mark(abs.body);
+                return abs;
+            };
+            self.markApp = function(app) {
+                app = app.clone();
+                if (app.fun.type == 'Abs') {
+                    self.marked = true;
+                    app.marked = true;
+                } else {
+                    app.fun = self._mark(app.fun);
+                    if (!self.marked) app.arg = self._mark(app.arg);
+                }
+                return app;
+            };
+            return self;
+        },
         CallByName: function() {
             var self = { reduced: false };
-            // reduce by visitor pattern
+            self.name = 'call by name';
             self.reduce = function(exp) {
                 return self.reduceMarked(self.mark(exp));
             };
@@ -202,6 +223,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return ns.Util.promote(exp).mark(self);
             };
             self.markApp = function(app) {
+                app = app.clone();
                 app.fun = self._mark(app.fun);
                 if (app.fun.type != 'Abs') return app;
                 if (!self.marked) {
@@ -239,23 +261,8 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         },
         CallByValue: function() {
             var self = new ns.Strategy.CallByName();
+            self.name = 'call by value';
             self.markArg = function(arg){ return self._mark(arg); };
-            return self;
-        },
-        NormalOrder: function() {
-            var self = new ns.Strategy.CallByName();
-            self.markAbs = function(abs) {
-                abs.body = self._mark(abs.body);
-                return abs;
-            };
-            var markApp = self.markApp;
-            self.markApp = function(app) {
-                app = markApp(app);
-                if (!self.marked && app.type == 'App') {
-                    app.arg = self._mark(app.arg);
-                }
-                return app;
-            };
             return self;
         }
     };

@@ -183,5 +183,42 @@ function init(id) {
         // REPL
         var elm = document.getElementById(id);
         var repl = new Repl(elm);
+
+        with (UI) {
+            var console = $(id);
+            var ul = $('strategy');
+            var selected = true;
+            for (var key in LambdaJS.Strategy) {
+                var st = new LambdaJS.Strategy[key];
+                var a = $new('a', { child: st.name });
+                a.href = '.';
+                var li = $new('li', {
+                    id: 'strategy'+key,
+                    klass: selected ? 'selected' : '',
+                    child: a
+                });
+                ul.appendChild(li);
+                selected = false;
+                addEvent(a, 'onclick', (function(li) {
+                    return function(e) {
+                        for (var key in LambdaJS.Strategy) {
+                            var st = new LambdaJS.Strategy[key];
+                            if (st.name == li.textContent) {
+                                li.className = 'selected';
+                                repl.getStrategy = (function(key) {
+                                    return function() {
+                                        return new LambdaJS.Strategy[key];
+                                    };
+                                })(key);
+                            } else {
+                                $('strategy'+key).className = '';
+                            }
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                    };
+                })(li));
+            }
+        }
     }
 };
