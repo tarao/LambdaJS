@@ -43,17 +43,22 @@
   color: #ff0000;
 }
 
-.console .marked > .abstraction > .lambda,
-.console .marked > .abstraction > .binding,
-.console .marked .bound
+.console .redex > .abstraction > .lambda,
+.console .redex > .abstraction > .binding,
+.console .redex .bound
 {
   color: #00cccc;
 }
 
-.console .marked > .argument,
-.console .marked > .argument *
+.console .redex > .argument,
+.console .redex > .argument *
 {
   text-decoration: underline;
+}
+
+.console .reduce
+{
+  margin-right: .5em;
 }
 
 .prompt

@@ -14,7 +14,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     var arg = app.arg;
                     var klass = 'application';
                     if (app.marked) {
-                        klass = [ klass, 'marked' ].join(' ');
+                        klass = [ klass, 'redex' ].join(' ');
                         var fun = app.fun.clone();
                         var bound = app.fun.arg.clone();
                         bound.bound = true;
