@@ -136,7 +136,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
     };
     ns.Repl = function(elm) {
         var self = {
-            getTimeout: function(){ return 500; },
+            getWait: function(){ return 500; },
             getStrategy: function() {
                 return new LambdaJS.Strategy.Leftmost();
             },
@@ -182,7 +182,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                         UI.replaceLastChild(self.console.view.lastChild,
                                             self.getPP().pp(self.exp));
                         self.reduce();
-                    }, self.getTimeout());
+                    }, self.getWait());
                     return true;
                 }
             }, self.cont);
@@ -199,7 +199,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     setTimeout(function() {
                         self.console.insert(red, self.getPP().pp(self.exp));
                         self.mark();
-                    }, self.getTimeout());
+                    }, self.getWait());
                 }
                 return true;
             }, self.cont);
@@ -235,5 +235,13 @@ function init(id) {
                 return new LambdaJS.PP[key];
             };
         }, 'JavaScript');
+
+        // wait
+        var ul = UI.$('pp');
+        ul.appendChild(UI.$new('li', { klass: 'label', child: 'Wait:' }));
+        var input = UI.$new('input', { id: 'wait' });
+        input.value = 500;
+        ul.appendChild(input);
+        repl.getWait = function(){ return input.value; };
     }
 };

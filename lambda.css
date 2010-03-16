@@ -117,6 +117,13 @@ ul.select li.selected a:visited:hover
   text-decoration: none;
 }
 
+#wait
+{
+  border: solid 2px #999999;
+  width: 3em;
+  text-align: right;
+}
+
 #syntax th, #syntax td
 {
   padding: .5em;
