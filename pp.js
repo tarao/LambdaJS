@@ -5,40 +5,32 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var append = function(child) { return function(node) {
             node.appendChild($node(child)); return node;
         }; };
-        var appendParen = function(child) { return function(node) {
-            ['(',child,')'].forEach(function(x){node.appendChild($node(x));});
-            return node;
+        var reduce = function() { var args=arguments; return function(node) {
+            var arr = []; arr.push.apply(arr, args);
+            return arr.reduce(function(a1, a2) {
+                return a1.concat((a2 instanceof Array) ? a2 : [a2]);
+            }, []).reduce(function(x, f) {
+                return ((typeof f == 'function') ? f : append(f))(x);
+            }, node);
         }; };
+        var appendParen = function(child){ return reduce('(', child, ')'); };
         ns.PP = {
             JavaScript: function() {
                 var self = ns.PP.Lambda();
                 self.name = 'JavaScript';
                 self.lambda = function(argNodes, bodyNode) {
-                    return function(node) {
-                        var lambda = $new('span', {
-                            klass: 'lambda', child: 'function'
-                        });
-                        append(lambda)(node);
-                        append('(')(node);
-                        append(argNodes.shift())(node);
-                        argNodes.forEach(function(arg) {
-                            append(arg)(append(',')(node));
-                        });
-                        append(')')(node);
-                        return self.body(bodyNode)(node);
-                    };
+                    var lambda = $new('span', {
+                        klass: 'lambda', child: 'function'
+                    });
+                    return reduce(lambda, '(', argNodes.shift(),
+                                  argNodes.map(function(arg) {
+                                      return reduce([ ',', arg ]);
+                                  }), ')', self.body(bodyNode));
                 };
-                self.body = function(bodyNode) { return function(node) {
-                    append('{ return ')(node);
-                    append(bodyNode)(node);
-                    return append(' }')(node);
-                }; };
-                self.apply = function(appendFun, appendArg) {
-                    return function(node) {
-                        appendFun(node);
-                        return appendArg(node);
-                    };
+                self.body = function(bodyNode) {
+                    return reduce('{ return ', bodyNode, ' }');
                 };
+                self.apply = function(fun, arg){ return reduce(fun, arg); };
                 self.arg = function(arg) {
                     var argNode = self.pp(arg);
                     var paren = $new('span', { klass: 'argument' });
@@ -48,10 +40,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             },
             JavaScript18: function() {
                 var self = ns.PP.JavaScript();
-                self.body = function(bodyNode) { return function(node) {
-                    append(' ')(node);
-                    return append(bodyNode)(node);
-                }; };
+                self.body = function(body){ return reduce(' ', body); };
                 return self;
             },
             Lambda: function() {
@@ -62,24 +51,12 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     return LambdaJS.Util.promote(exp).pp(self);
                 };
                 self.lambda = function(argNodes, bodyNode) {
-                    return function(node) {
-                        var lambda = $new('span', {
-                            klass: 'lambda',
-                            child: '\u03bb'
-                        });
-                        append(lambda)(node);
-                        argNodes.forEach(function(arg){ append(arg)(node); });
-                        append('.')(node);
-                        return append(bodyNode)(node);
-                    };
+                    var lambda = $new('span', {
+                        klass: 'lambda', child: '\u03bb'
+                    });
+                    return reduce(lambda, argNodes, '.', bodyNode);
                 };
-                self.apply = function(appendFun, appendArg) {
-                    return function(node) {
-                        appendFun(node);
-                        append(' ')(node);
-                        return appendArg(node);
-                    };
-                };
+                self.apply = function(fun, arg){ return reduce(fun,' ',arg); };
                 self.arg = function(arg) {
                     var argNode = self.pp(arg);
                     if (arg.type != 'Var') {
