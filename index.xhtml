@@ -40,18 +40,15 @@
       <tr><th>abstraction</th><td><code>&lambda;x.<var>M</var></code> or <code>\x.<var>M</var></code></td><td><code>function(x){ return <var>M</var> }</code></td><td><code>function(x) <var>M</var></code></td></tr>
       <tr><th>application</th><td><code>(<var>M</var> <var>N</var>)</code></td><td><code><var>M</var>(<var>N</var>)</code></td><td><code><var>M</var>(<var>N</var>)</code></td></tr>
       <tr><th>declaration</th><td>-</td><td><code>var a = <var>M</var></code></td><td><code>let a = <var>M</var></code></td></tr>
-      <tr><th>syntax sugar</th><td><code>&lambda;x&hellip;z.<var>M</var></code> for <code>&lambda;x.&hellip;.&lambda;z.<var>M</var></code></td><td><code>function(x, &hellip;, z) { return <var>M</var> }</code> for <code>function(x) { return &hellip; return function(z) { return <var>M</var> } } }</code></td><td><code>function(x, &hellip;, z) <var>M</var></code> for <code>function(x) &hellip; function(z) <var>M</var></code></td></tr>
+      <tr><th>syntax sugar</th><td><code>&lambda;x&hellip;z.<var>M</var></code> for <code>&lambda;x.&hellip;.&lambda;z.<var>M</var></code></td><td><code>function(x, &hellip;, z){ return <var>M</var> }</code> for <code>function(x){ return &hellip; return function(z){ return <var>M</var> } } }</code></td><td><code>function(x, &hellip;, z) <var>M</var></code> for <code>function(x) &hellip; function(z) <var>M</var></code></td></tr>
     </table>
 
     <h2>Example</h2>
 
-<!--
     <dl>
       <dt>code1</dt>
       <dd>
-        <pre><code id="code1">let k = function(x) function(y) x;
-let s = function(x) function(y) function(z) x(z)(y(z));
-s(k)(k);</code></pre>
+        <pre><code id="code1">(function(x){ return x })(a);</code></pre>
       </dd>
     </dl>
     <p><a id="run-code1" href=".">run code1</a></p>
@@ -59,13 +56,111 @@ s(k)(k);</code></pre>
     <dl>
       <dt>code2</dt>
       <dd>
-        <pre><code id="code2">var k = function(x){ return function(y){ return x } };
-var s = function(x){ return function(y){ return function(z){ return x(z)(y(z)) } } };
-s(k)(k);</code></pre>
+        <pre><code id="code2">(function(x,y){ return x })(a);</code></pre>
       </dd>
     </dl>
     <p><a id="run-code2" href=".">run code2</a></p>
--->
+
+    <dl>
+      <dt>code3</dt>
+      <dd>
+        <pre><code id="code3">var k = function(x,y){ return x };
+k(a)(b);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code3" href=".">run code3</a></p>
+
+    <dl>
+      <dt>code4</dt>
+      <dd>
+        <pre><code id="code4">var s = function(x,y,z){ return x(z)(y(z)) };
+var k = function(x,y){ return x };
+s(k)(k);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code4" href=".">run code4</a></p>
+
+    <dl>
+      <dt>code5</dt>
+      <dd>
+        <pre><code id="code5">var s = function(x,y,z){ return x(z)(y(z)) };
+var k = function(x,y){ return x };
+s(a)(k)(c)</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code5" href=".">run code5</a></p>
+
+    <dl>
+      <dt>code6</dt>
+      <dd>
+        <pre><code id="code6">var o = function(x){ return x(x)(c) };
+o(o);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code6" href=".">run code6</a></p>
+
+    <dl>
+      <dt>code7 (leftmost)</dt>
+      <dd>
+        <pre><code id="code7" class="leftmost">var k = function(x,y){ return x };
+var o = function(x){ return x(x)(c) };
+k(a)(o(o))</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code7" href=".">run code7</a></p>
+
+    <dl>
+      <dt>code8 (call by value)</dt>
+      <dd>
+        <pre><code id="code8" class="call-by-value">var k = function(x,y){ return x };
+var o = function(x){ return x(x)(c) };
+k(a)(o(o))</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code8" href=".">run code8</a></p>
+
+    <dl>
+      <dt>code9</dt>
+      <dd>
+        <pre><code id="code9">var _0 = function(s,z){ return z };
+var _1 = function(s,z){ return s(z) };
+var _2 = function(s,z){ return s(s(z)) };
+var _3 = function(s,z){ return s(s(s(z))) };
+// ...
+// n = function(s,z){ return s(s(...(s(z))...)) };
+//                           ^ ^ ... ^ : n times
+
+var add = function(m,n,s,z){ return m(s)(n(s)(z)) };
+var mul = function(m,n,s,z){ return n(m(s))(z) };
+
+add(_2)(_3);</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code9" href=".">run code9</a></p>
+
+    <dl>
+      <dt>code10</dt>
+      <dd>
+        <pre><code id="code10">var pair = function(P,Q){ return function(x){ return x(P)(Q) } }; // cons
+var fst = function(p){ return p(function(x,y){ return x }) };     // car
+var snd = function(p){ return p(function(x,y){ return y }) };     // cdr
+
+var p1 = pair(pair(a)(b))(pair(c)(d));
+fst(snd(p1));</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code10" href=".">run code10</a></p>
+
+    <dl>
+      <dt>code11</dt>
+      <dd>
+        <pre><code id="code11">var t = function(x,y){ return x };
+var f = function(x,y){ return y };
+var cond = function(B,P,Q){ return B(P)(Q) };
+cond(t)(a)(b); // if true then a else b</code></pre>
+      </dd>
+    </dl>
+    <p><a id="run-code11" href=".">run code11</a></p>
   </div>
   <div id="footer">
     <address>ina at kuis.kyoto-u.ac.jp</address>

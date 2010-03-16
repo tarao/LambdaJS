@@ -1,6 +1,6 @@
 .console
 {
-  height: 20em;
+  height: 8em;
   overflow-x: hidden;
   overflow-y: scroll;
   white-space: nowrap;
@@ -10,6 +10,11 @@
   background-color: #000000;
   color: #ffffff;
   font-family: monospace;
+}
+
+#console
+{
+  height: 20em;
 }
 
 .console ul

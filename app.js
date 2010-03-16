@@ -95,7 +95,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         };
         return self;
     };
-    ns.Repl = function(elm) {
+    ns.Repl = function(elm, cont) {
         var self = {
             getWait: function(){ return 500; },
             getStrategy: function() {
@@ -104,11 +104,12 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             getPP: function() {
                 return new LambdaJS.PP.Lambda();
             },
-            cont: function() {
+            cont: cont || function() {
                 self.console.prompt();
                 if (self.abort) self.abort.die();
             },
-            env: new LambdaJS.Env()
+            env: new LambdaJS.Env(),
+            parse: function(cmd){ return self.env.evalLine(cmd); }
         };
         self.makeAbortButton = function() {
             var parent = self.console.view.parentNode;
@@ -129,7 +130,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         };
         self.console = new UI.Console(elm, function(cmd) {
             self.sandbox(function() {
-                self.exp = self.env.evalLine(cmd);
+                self.exp = self.parse(cmd);
                 if (self.exp) {
                     self.strategy = self.getStrategy();
                     self.console.insert(self.getPP().pp(self.exp));
@@ -194,6 +195,75 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.cont();
         return self;
     };
+    ns.StaticCode = function() {
+        var self = ns.StaticCode;
+        self.hash = {};
+        self.run = function(id) {
+            var code = self.hash[id];
+            if (code) code.run();
+        };
+        self.forEach = function(fun) {
+            if (typeof fun == 'string') fun = function(obj){ obj[fun](); };
+            for (var id in self.hash) fun(self.hash[id]);
+        };
+        self.toLambda = function(){ self.forEach('toLambda'); };
+        self.toJavaScript = function(){ self.forEach('toJavaScript'); };
+        self.toJavaScript18 = function(){ self.forEach('toJavaScript18'); };
+        var Code = function(node) {
+            var self = { node: node, code: node.textContent };
+            (node.className||'').split(/\s+/).forEach(function(name) {
+                name = name.split('-').map(function(s) {
+                    return s.charAt(0).toUpperCase()+s.substring(1);
+                }).join('');
+                if (name in LambdaJS.Strategy) self.st = name;
+            });
+            self.toLambda = function() {
+            };
+            self.toJavaScript = function() {
+            };
+            self.toJavaScript18 = function() {
+            };
+            self.run = function() {
+                if (!self.repl) {
+                    var parent = self.node.parentNode.parentNode;
+                    var div = UI.$new('div', { klass: 'console' });
+                    parent.appendChild(div);
+                    var repl = self.repl = new ns.Repl(div, function() {});
+                    repl.cont = function(){ repl.abort && repl.abort.die(); };
+                    var get = function(k){ return UI.$('input-'+k).value; };
+                    repl.getStrategy = function() {
+                        var st = self.st || get('strategy') || 'Leftmost';
+                        return new LambdaJS.Strategy[st];
+                    };
+                    repl.getPP = function() {
+                        return new LambdaJS.PP[get('pp') || 'JavaScript'];
+                    };
+                    repl.getWait = function() {
+                        var wait = get('wait');
+                        return (typeof wait != 'undefined') ? wait : 500;
+                    };
+                    repl.parse = function(c){ return repl.env.evalLines(c); };
+                }
+                self.repl.console.clear();
+                self.repl.console.insert([
+                    '[', self.repl.getStrategy().name,
+                    '/', self.repl.getPP().name,
+                    ']'].join(' '));
+                self.repl.console.command(self.code);
+            };
+            return self;
+        };
+        var name = 'LambdaJS.App.StaticCode';
+        var links = UI.doc.getElementsByTagName('a');
+        for (var i=0; i < links.length; i++) {
+            var node;
+            if (links[i].id.match(/^run-(.+)/) && (node=UI.$(RegExp.$1))) {
+                links[i].href = "javascript:"+name+".run('"+node.id+"')";
+                self.hash[node.id] = new Code(node);
+            }
+        }
+        return self;
+    };
 })(LambdaJS.App);
 
 function init(id) {
@@ -201,6 +271,9 @@ function init(id) {
         // hide unsupported syntax
         hideSyntax(document.getElementById('syntax'),
                    isJS18Enabled() ? 'javascript' : 'javascript18');
+
+        // examples
+        var examples = new StaticCode();
 
         // REPL
         var elm = document.getElementById(id);
@@ -237,5 +310,6 @@ function init(id) {
         sync();
         ul.appendChild(input);
         repl.getWait = function(){ return input.value; };
+
     }
 };

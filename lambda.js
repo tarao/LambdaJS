@@ -23,17 +23,17 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             sandbox: new ns.Sandbox(),
             stack: []
         };
-        self.evalResolvingReference = function(line) {
+        self.evalResolvingReference = function(code) {
             while (true) {
                 try {
-                    return self.sandbox.run(line);
+                    return self.sandbox.run(code);
                 } catch (e) {
                     if (/^([^\s]+) is not defined$/.test(e.message)) {
-                        line = [
+                        code = [
                             [ 'var', RegExp.$1, '=',
                               "LambdaJS.Util.promote('"+RegExp.$1+"');"
                             ].join(' '),
-                            line
+                            code
                         ].join("\n");
                     } else {
                         throw { message: e.message };
@@ -41,14 +41,21 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 }
             }
         };
-        self.evalLine = function(line) {
-            line = self.parser.parseLine(line);
-            var code = self.stack.concat([line]).join("\n");
+        self.evalCode = function(code) {
+            code = self.stack.concat([code]).join("\n");
             var ret = self.evalResolvingReference(code);
             if (typeof ret == 'undefined') {
-                self.stack.push(line);
+                self.stack.push(code);
             }
             return ret;
+        };
+        self.evalLine = function(line) {
+            line = self.parser.parseLine(line);
+            return self.evalCode(line);
+        };
+        self.evalLines = function(lines) {
+            lines = self.parser.parse(lines);
+            return self.evalCode(lines.join(''));
         };
         return self;
     };
@@ -294,7 +301,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         self.parseExpr = function(str, nest) {
             var arr = [];
             var app = false;
-            var rec = function(str){ return self.parseExpr(str, true); };
+            var rec = function(str) {
+                return self.parseExpr(str.replace(/^\s+/, ''), true);
+            };
             while (str.length) {
                 var first = str.charAt(0);
                 if (/[({[]/.test(first)) {
@@ -318,7 +327,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     str = '';
                 } else if (/^return([^\w].*)$/.test(str)) {
                     arr.push([
-                        'return', rec(RegExp.$1)
+                        'return ', rec(RegExp.$1)
                     ].join(' '));
                     str = '';
                 } else if (/^[\u03bb\\](\w+)\.(.*)$/.test(str)) {
@@ -331,9 +340,16 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     str = RegExp.$2;
                     if (nest && arr.length > 0) app = true;
                     continue;
-                } else if (/^(\S+)(.*)$/.test(str)) {
-                    arr.push(RegExp.$1);
+                } else if (/^([^(){}[\]\s]+)(.*)$/.test(str)) {
+                    var token = RegExp.$1;
                     str = RegExp.$2;
+                    if (/^(.*?)(function[^\w].*|return[^\w].*)$/.test(token)) {
+                        token = RegExp.$1;
+                        str = RegExp.$2 + str;
+                    }
+                    arr.push(token);
+                } else {
+                    throw { message: 'syntax error' };
                 }
                 if (app) {
                     if (arr[arr.length-3] && arr[arr.length-1]) {
