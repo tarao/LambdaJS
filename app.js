@@ -226,6 +226,7 @@ function init(id) {
             repl.getStrategy = function() {
                 return new LambdaJS.Strategy[key];
             };
+            if (repl.console.input) repl.console.input.focus();
         }, 'Leftmost');
 
         // output
@@ -234,6 +235,7 @@ function init(id) {
             repl.getPP = function() {
                 return new LambdaJS.PP[key];
             };
+            if (repl.console.input) repl.console.input.focus();
         }, 'JavaScript');
 
         // wait

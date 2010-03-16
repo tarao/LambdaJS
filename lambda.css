@@ -43,15 +43,15 @@
   color: #ff0000;
 }
 
-.console .redex > .abstraction > .lambda,
-.console .redex > .abstraction > .binding,
-.console .redex .bound
+.console .marked > .abstraction > .lambda,
+.console .marked > .abstraction > .binding,
+.console .marked .bound
 {
   color: #00cccc;
 }
 
-.console .redex > .argument,
-.console .redex > .argument *
+.console .marked > .argument,
+.console .marked > .argument *
 {
   text-decoration: underline;
 }
@@ -106,6 +106,14 @@ ul.select li a:visited:hover
   border-style: none;
   outline-style: none;
   text-decoration: underline;
+}
+
+ul.select li a:active,
+ul.select li a:active:hover
+{
+  color: red;
+  border-style: none;
+  outline-style: none;
 }
 
 ul.select li.selected a,

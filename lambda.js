@@ -186,7 +186,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 app = app.clone();
                 if (app.fun.type == 'Abs') {
                     self.marked = true;
-                    app.redex = true;
+                    app.marked = true;
                 } else {
                     app.fun = self._mark(app.fun);
                     if (!self.marked) app.arg = self._mark(app.arg);
@@ -217,7 +217,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 }
                 if (!self.marked) {
                     self.marked = true;
-                    app.redex = true;
+                    app.marked = true;
                 }
                 return app;
             };
@@ -236,7 +236,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             self.reduceMarkedApp = function(app) {
                 app.fun = self._reduceMarked(app.fun);
                 app.arg = self._reduceMarked(app.arg);
-                if (app.redex) {
+                if (app.marked) {
                     self.reduced = true;
                     return app.fun.body.subst(app.arg, app.fun.arg);
                 }
