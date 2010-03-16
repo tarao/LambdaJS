@@ -97,6 +97,43 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             }
         }
     };
+    ns.Selector = function(cat, action, dflt) {
+        var self = { hash: {} };
+        for (var key in LambdaJS[cat]) {
+            var obj = new LambdaJS[cat][key]();
+            self.hash[obj.name] = { key: key };
+        }
+        var name = cat.toLowerCase();
+        with (UI) {
+            var ul = $(name);
+            for (var label in self.hash) {
+                var key = self.hash[label].key;
+                var selected = (key==dflt || label==dflt);
+                var a = $new('a', { child: label }); a.href = '.';
+                var li = $new('li', {
+                    id: name+key, klass: selected ? 'selected' : '', child: a
+                });
+                self.hash[label].li = li;
+                ul.appendChild(li);
+                if (selected) action(key);
+                addEvent(a, 'onclick', (function(li) {
+                    return function(e) {
+                        for (var label in self.hash) {
+                            if (label == li.textContent) {
+                                li.className = 'selected';
+                                action(self.hash[label].key);
+                            } else {
+                                self.hash[label].li.className = '';
+                            }
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                    };
+                })(li));
+            }
+            return self;
+        }
+    };
     ns.Repl = function(elm) {
         var self = {
             getTimeout: function(){ return 500; },
@@ -184,41 +221,19 @@ function init(id) {
         var elm = document.getElementById(id);
         var repl = new Repl(elm);
 
-        with (UI) {
-            var console = $(id);
-            var ul = $('strategy');
-            var selected = true;
-            for (var key in LambdaJS.Strategy) {
-                var st = new LambdaJS.Strategy[key];
-                var a = $new('a', { child: st.name });
-                a.href = '.';
-                var li = $new('li', {
-                    id: 'strategy'+key,
-                    klass: selected ? 'selected' : '',
-                    child: a
-                });
-                ul.appendChild(li);
-                selected = false;
-                addEvent(a, 'onclick', (function(li) {
-                    return function(e) {
-                        for (var key in LambdaJS.Strategy) {
-                            var st = new LambdaJS.Strategy[key];
-                            if (st.name == li.textContent) {
-                                li.className = 'selected';
-                                repl.getStrategy = (function(key) {
-                                    return function() {
-                                        return new LambdaJS.Strategy[key];
-                                    };
-                                })(key);
-                            } else {
-                                $('strategy'+key).className = '';
-                            }
-                        }
-                        e.preventDefault();
-                        e.stopPropagation();
-                    };
-                })(li));
-            }
-        }
+        // strategy
+        new Selector('Strategy', function(key) {
+            repl.getStrategy = function() {
+                return new LambdaJS.Strategy[key];
+            };
+        }, 'Leftmost');
+
+        // output
+        if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
+        new Selector('PP', function(key) {
+            repl.getPP = function() {
+                return new LambdaJS.PP[key];
+            };
+        }, 'JavaScript');
     }
 };

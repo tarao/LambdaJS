@@ -82,6 +82,11 @@ ul.select li
   margin: 0 .5em 0 0;
 }
 
+ul.select li.label
+{
+  font-weight: bold;
+}
+
 ul.select li a
 {
   margin: 0;
@@ -109,6 +114,7 @@ ul.select li.selected a:visited:hover
 {
   color: #ffffff;
   background-color: #999999;
+  text-decoration: none;
 }
 
 #syntax th, #syntax td
