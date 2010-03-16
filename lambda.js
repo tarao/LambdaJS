@@ -2,7 +2,6 @@
   TODO:
   - interactive UI
   -- resizer on console
-  -- abort button
   -- mark alpha conversion?
   - test in other browsers
 */

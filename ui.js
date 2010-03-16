@@ -2,19 +2,13 @@ if (typeof UI == 'undefined') var UI = {};
 
 (function(ns) {
     ns.doc = ns.doc || document;
-    ns.$ = function(id) {
-        return ns.doc.getElementById(id);
-    };
+    ns.$ = function(id){ return ns.doc.getElementById(id); };
     ns.$new = function(tag, args) {
         var elm = ns.doc.createElement(tag);
         args = args || {};
         if (args.id) elm.id = args.id;
         if (args.klass) elm.className = args.klass;
-        if (args.style) {
-            for (var prop in args.style) {
-                elm.style[prop] = args.style[prop];
-            }
-        }
+        for (var prop in (args.style||{})) elm.style[prop] = args.style[prop];
         if (args.child) {
             if (!(args.child instanceof Array)) args.child = [ args.child ];
             for (var i=0; i < args.child.length; i++) {
@@ -28,14 +22,12 @@ if (typeof UI == 'undefined') var UI = {};
     ns.$node = function(node) {
         return (node instanceof Node) ? node : ns.$text(node);
     }
-    ns.addEvent = function(element, event, func) {
-        if (element.addEventListener) {
-            if (event.indexOf('on') == 0) {
-                event = event.substr(2);
-            }
-            element.addEventListener(event, func, false);
-        } else if (element.attachEvent) {
-            element.attachEvent(event, func);
+    ns.addEvent = function(node, event, func) {
+        if (node.addEventListener) {
+            if (event.indexOf('on') == 0) event = event.substr(2);
+            node.addEventListener(event, func, false);
+        } else if (node.attachEvent) {
+            node.attachEvent(event, func);
         }
     };
     ns.insertText = function(node, text) {
