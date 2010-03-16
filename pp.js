@@ -58,7 +58,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var self = { name: 'Lambda', callback: function(){} };
                 self.setCallback = function(func){ self.callback = func; };
                 self.pp = function(exp){ return $node(self._pp(exp)); };
-                self._pp = function(exp){ return exp.pp(self); };
+                self._pp = function(exp) {
+                    return LambdaJS.Util.promote(exp).pp(self);
+                };
                 self.lambda = function(argNodes, bodyNode) {
                     return function(node) {
                         var lambda = $new('span', {
