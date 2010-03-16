@@ -13,14 +13,17 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             JavaScript: function() {
                 var self = ns.PP.Lambda();
                 self.name = 'JavaScript';
-                self.lambda = function(argNode, bodyNode) {
+                self.lambda = function(argNodes, bodyNode) {
                     return function(node) {
                         var lambda = $new('span', {
                             klass: 'lambda', child: 'function'
                         });
                         append(lambda)(node);
                         append('(')(node);
-                        append(argNode)(node);
+                        append(argNodes.shift())(node);
+                        argNodes.forEach(function(arg) {
+                            append(arg)(append(',')(node));
+                        });
                         append(')')(node);
                         return self.body(bodyNode)(node);
                     };
@@ -56,14 +59,14 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 self.setCallback = function(func){ self.callback = func; };
                 self.pp = function(exp){ return $node(self._pp(exp)); };
                 self._pp = function(exp){ return exp.pp(self); };
-                self.lambda = function(argNode, bodyNode) {
+                self.lambda = function(argNodes, bodyNode) {
                     return function(node) {
                         var lambda = $new('span', {
                             klass: 'lambda',
                             child: '\u03bb'
                         });
                         append(lambda)(node);
-                        append(argNode)(node);
+                        argNodes.forEach(function(arg){ append(arg)(node); });
                         append('.')(node);
                         return append(bodyNode)(node);
                     };
@@ -116,7 +119,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 self.ppAbs = function(abs) {
                     var arg = self.pp(abs.arg);
                     arg.className += ' binding';
-                    return self.lambda(arg, self.pp(abs.body))($new('span', {
+                    var body = abs.body;
+                    var args = [ arg ];
+                    while (body.type == 'Abs') {
+                        args.push(self.pp(body.arg));
+                        body = body.body;
+                    }
+                    return self.lambda(args, self.pp(body))($new('span', {
                         klass: 'abstraction'
                     }));
                 };
