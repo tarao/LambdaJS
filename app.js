@@ -77,6 +77,24 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             return self;
         }
     };
+    ns.AbortButton = function(parent, style, callback) {
+        var self = function(){ return self.aborted; };
+        self.aborted = false;
+        self.button = UI.$new('a', { klass: 'abort', style: style, child: [
+            UI.$new('span', { klass: 'icon', child: '\u2716' }),
+            'abort'
+        ] });
+        parent.appendChild(self.button);
+        UI.addEvent(self.button, 'onclick', function() {
+            self.aborted=true;
+            callback();
+        });
+        self.die = function() {
+            if (!self.died) parent.removeChild(self.button);
+            self.died = true;
+        };
+        return self;
+    };
     ns.Repl = function(elm) {
         var self = {
             getWait: function(){ return 500; },
@@ -86,8 +104,28 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             getPP: function() {
                 return new LambdaJS.PP.Lambda();
             },
-            cont: function(){ self.console.prompt(); },
+            cont: function() {
+                self.console.prompt();
+                if (self.abort) self.abort.die();
+            },
             env: new LambdaJS.Env()
+        };
+        self.makeAbortButton = function() {
+            var parent = self.console.view.parentNode;
+            var pos = UI.getPosition(parent);
+            self.abort = new ns.AbortButton(parent, {
+                position: 'absolute'
+            }, function() {
+                if (self.marker) {
+                    self.marker.setCallback(function(){});
+                    self.marker = null;
+                }
+                self.cont();
+            });
+            pos.x += parent.offsetWidth-self.abort.button.offsetWidth;
+            pos.y += parent.offsetHeight;
+            self.abort.button.style.left = pos.x+'px';
+            self.abort.button.style.top = pos.y+'px';
         };
         self.console = new UI.Console(elm, function(cmd) {
             self.sandbox(function() {
@@ -95,6 +133,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 if (self.exp) {
                     self.strategy = self.getStrategy();
                     self.console.insert(self.getPP().pp(self.exp));
+                    self.makeAbortButton();
                     self.mark();
                 } else {
                     self.cont();
@@ -122,10 +161,11 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 self.exp = strategy.mark(self.exp);
                 if (strategy.marked) {
                     setTimeout(function() {
-                        var marker = self.getPP();
+                        if (self.abort()) return;
+                        self.marker = self.getPP();
                         UI.replaceLastChild(self.console.view.lastChild,
-                                            marker.pp(self.exp));
-                        self.reduce(marker);
+                                            self.marker.pp(self.exp));
+                        self.reduce(self.marker);
                     }, self.getWait());
                     return true;
                 }
@@ -141,7 +181,8 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                         child: '\u2192'
                     });
                     setTimeout(function() {
-                        self.console.insert(red, marker.pp(self.exp));
+                        if (self.abort()) return;
+                        self.console.insert(red, self.marker.pp(self.exp));
                         self.mark();
                     }, self.getWait());
                 } else {

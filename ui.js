@@ -16,7 +16,7 @@ if (typeof UI == 'undefined') var UI = {};
             }
         }
         if (args.child) {
-            if (typeof args.child != 'Array') args.child = [ args.child ];
+            if (!(args.child instanceof Array)) args.child = [ args.child ];
             for (var i=0; i < args.child.length; i++) {
                 var child = ns.$node(args.child[i]);
                 elm.appendChild(child);
@@ -26,7 +26,7 @@ if (typeof UI == 'undefined') var UI = {};
     };
     ns.$text = function(str){ return ns.doc.createTextNode(str); };
     ns.$node = function(node) {
-        return node instanceof Node ? node : ns.$text(node);
+        return (node instanceof Node) ? node : ns.$text(node);
     }
     ns.addEvent = function(element, event, func) {
         if (element.addEventListener) {
@@ -49,6 +49,14 @@ if (typeof UI == 'undefined') var UI = {};
         } else {
             node.value += text;
         }
+    };
+    ns.getPosition = function(node) {
+        var pos = {x:0, y:0};
+        do {
+            pos.x += node.offsetLeft;
+            pos.y += node.offsetTop;
+        } while (node = node.offsetParent);
+        return pos;
     };
     ns.removeAllChildren = function(node) {
         while (node.firstChild) node.removeChild(node.firstChild);
