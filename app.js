@@ -179,15 +179,16 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 self.exp = strategy.mark(self.exp);
                 if (strategy.marked) {
                     setTimeout(function() {
+                        var marker = self.getPP();
                         UI.replaceLastChild(self.console.view.lastChild,
-                                            self.getPP().pp(self.exp));
-                        self.reduce();
+                                            marker.pp(self.exp));
+                        self.reduce(marker);
                     }, self.getWait());
                     return true;
                 }
             }, self.cont);
         };
-        self.reduce = function() {
+        self.reduce = function(marker) {
             self.sandbox(function() {
                 var strategy = self.getStrategy();
                 self.exp = strategy.reduceMarked(self.exp);
@@ -197,9 +198,11 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                         child: '\u2192'
                     });
                     setTimeout(function() {
-                        self.console.insert(red, self.getPP().pp(self.exp));
+                        self.console.insert(red, marker.pp(self.exp));
                         self.mark();
                     }, self.getWait());
+                } else {
+                    marker.setCallback(function(){ self.mark(); });
                 }
                 return true;
             }, self.cont);

@@ -2,7 +2,6 @@
   TODO:
   - interactive UI
   -- resizer on console
-  -- manual mode (strategy which requires user to choose redex)
   -- abort button
   -- mark alpha conversion?
   - test in other browsers
@@ -139,8 +138,11 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         App: function(func, arg) {
             var self = ns.Semantics.Base('App', arguments);
             self.clone = function() {
-                return new ns.Semantics.App(self.fun.clone(),
-                                            self.arg.clone());
+                var c = new ns.Semantics.App(self.fun.clone(),
+                                             self.arg.clone());
+                c.marked = self.marked;
+                c.redex = self.redex;
+                return c;
             };
             self.subst = function(arg, v) {
                 var app = self.clone();
@@ -248,6 +250,26 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = new ns.Strategy.CallByName();
             self.name = 'call by value';
             self.markArg = function(arg){ return self._mark(arg); };
+            return self;
+        },
+        Manual: function() {
+            var self = new ns.Strategy.CallByName();
+            self.name = 'manual';
+            self.markAbs = function(abs) {
+                abs = abs.clone();
+                abs.body = self._mark(abs.body);
+                return abs;
+            };
+            self.markApp = function(app) {
+                app = app.clone();
+                if (app.fun.type == 'Abs') {
+                    self.marked = true;
+                    app.redex = true;
+                }
+                app.fun = self._mark(app.fun);
+                app.arg = self._mark(app.arg);
+                return app;
+            };
             return self;
         }
     };

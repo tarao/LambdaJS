@@ -43,17 +43,48 @@
   color: #ff0000;
 }
 
+.console .redex > .abstraction > .lambda
+{
+  color: #8c8ce8;
+}
+
 .console .marked > .abstraction > .lambda,
 .console .marked > .abstraction > .binding,
-.console .marked .bound
+.console .marked .bound,
+.console .redex:hover > .abstraction > .lambda,
+.console .redex:hover > .abstraction > .binding
 {
   color: #00cccc;
 }
 
 .console .marked > .argument,
-.console .marked > .argument *
+.console .marked > .argument *,
+.console .redex:hover > .argument,
+.console .redex:hover > .argument *
 {
   text-decoration: underline;
+}
+
+.console .redex
+{
+  text-decoration: none;
+}
+
+.console .redex:hover
+{
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #6666ff;
+  background-color: #333366;
+}
+
+.console .redex:active,
+.console .redex:active:hover
+{
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #ff3333 ! important;
+  background-color: #663333 ! important;
 }
 
 .console .reduce
