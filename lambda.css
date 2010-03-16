@@ -99,6 +99,11 @@
   margin-right: .5em;
 }
 
+#store
+{
+  display: none;
+}
+
 ul.select
 {
   list-style-type: none;

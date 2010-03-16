@@ -229,8 +229,9 @@ function init(id) {
             repl.getStrategy = function() {
                 return new LambdaJS.Strategy[key];
             };
+            UI.$('input-strategy').value = key;
             if (repl.console.input) repl.console.input.focus();
-        }, 'Leftmost');
+        }, UI.$('input-strategy').value || 'Leftmost');
 
         // output
         if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
@@ -238,14 +239,20 @@ function init(id) {
             repl.getPP = function() {
                 return new LambdaJS.PP[key];
             };
+            UI.$('input-pp').value = key;
             if (repl.console.input) repl.console.input.focus();
-        }, 'JavaScript');
+        }, UI.$('input-pp').value || 'JavaScript');
 
         // wait
         var ul = UI.$('pp');
         ul.appendChild(UI.$new('li', { klass: 'label', child: 'Wait:' }));
         var input = UI.$new('input', { id: 'wait' });
-        input.value = 500;
+        var sync = function(){ UI.$('input-wait').value = input.value; };
+        UI.addEvent(input, 'onchange', sync);
+        UI.addEvent(input, 'onkeyup', sync);
+        var w = UI.$('input-wait').value;
+        input.value = w.length ? w : 500;
+        sync();
         ul.appendChild(input);
         repl.getWait = function(){ return input.value; };
     }
