@@ -96,6 +96,8 @@ if (typeof UI == 'undefined') var UI = {};
                     li.appendChild(elm);
                 }
                 self.view.appendChild(li);
+                var parent = self.view.parentNode;
+                parent.scrollTop = parent.scrollHeight;
                 return li;
             };
             self.err = function(message) {
