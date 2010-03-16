@@ -10,6 +10,47 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return node;
         }; };
         ns.PP = {
+            JavaScript: function() {
+                var self = ns.PP.Lambda();
+                self.name = 'JavaScript';
+                self.lambda = function(argNode, bodyNode) {
+                    return function(node) {
+                        var lambda = $new('span', {
+                            klass: 'lambda', child: 'function'
+                        });
+                        append(lambda)(node);
+                        append('(')(node);
+                        append(argNode)(node);
+                        append(')')(node);
+                        return self.body(bodyNode)(node);
+                    };
+                };
+                self.body = function(bodyNode) { return function(node) {
+                    append('{ return ')(node);
+                    append(bodyNode)(node);
+                    return append(' }')(node);
+                }; };
+                self.apply = function(appendFun, appendArg) {
+                    return function(node) {
+                        appendFun(node);
+                        return appendArg(node);
+                    };
+                };
+                self.arg = function(arg) {
+                    var argNode = self.pp(arg);
+                    var paren = $new('span', { klass: 'argument' });
+                    return append(appendParen(argNode)(paren));
+                };
+                return self;
+            },
+            JavaScript18: function() {
+                var self = ns.PP.JavaScript();
+                self.body = function(bodyNode) { return function(node) {
+                    append(' ')(node);
+                    return append(bodyNode)(node);
+                }; };
+                return self;
+            },
             Lambda: function() {
                 var self = { name: 'Lambda', callback: function(){} };
                 self.setCallback = function(func){ self.callback = func; };
@@ -87,47 +128,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     });
                     return span;
                 };
-                return self;
-            },
-            JavaScript: function() {
-                var self = ns.PP.Lambda();
-                self.name = 'JavaScript';
-                self.lambda = function(argNode, bodyNode) {
-                    return function(node) {
-                        var lambda = $new('span', {
-                            klass: 'lambda', child: 'function'
-                        });
-                        append(lambda)(node);
-                        append('(')(node);
-                        append(argNode)(node);
-                        append(')')(node);
-                        return self.body(bodyNode)(node);
-                    };
-                };
-                self.body = function(bodyNode) { return function(node) {
-                    append('{ return ')(node);
-                    append(bodyNode)(node);
-                    return append(' }')(node);
-                }; };
-                self.apply = function(appendFun, appendArg) {
-                    return function(node) {
-                        appendFun(node);
-                        return appendArg(node);
-                    };
-                };
-                self.arg = function(arg) {
-                    var argNode = self.pp(arg);
-                    var paren = $new('span', { klass: 'argument' });
-                    return append(appendParen(argNode)(paren));
-                };
-                return self;
-            },
-            JavaScript18: function() {
-                var self = ns.PP.JavaScript();
-                self.body = function(bodyNode) { return function(node) {
-                    append(' ')(node);
-                    return append(bodyNode)(node);
-                }; };
                 return self;
             }
         };
