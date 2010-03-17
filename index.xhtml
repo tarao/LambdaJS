@@ -141,9 +141,9 @@ add(_2)(_3);</code></pre>
     <dl>
       <dt>code10</dt>
       <dd>
-        <pre><code id="code10">var pair = function(P,Q){ return function(x){ return x(P)(Q) } }; // cons
-var fst = function(p){ return p(function(x,y){ return x }) };     // car
-var snd = function(p){ return p(function(x,y){ return y }) };     // cdr
+        <pre><code id="code10">var pair = function(P,Q,x){ return x(P)(Q) }; // cons
+var fst = function(p){ return p(function(x,y){ return x }) }; // car
+var snd = function(p){ return p(function(x,y){ return y }) }; // cdr
 
 var p1 = pair(pair(a)(b))(pair(c)(d));
 fst(snd(p1));</code></pre>

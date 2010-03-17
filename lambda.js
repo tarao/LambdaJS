@@ -55,7 +55,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         };
         self.evalLines = function(lines) {
             lines = self.parser.parse(lines);
-            return self.evalCode(lines.join(''));
+            return lines.reduce(function(r,l){return self.evalCode(l);}, null);
         };
         return self;
     };

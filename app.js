@@ -104,13 +104,15 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             getPP: function() {
                 return new LambdaJS.PP.Lambda();
             },
-            cont: cont || function() {
+            env: new LambdaJS.Env(),
+            contDefault: function() {
                 self.console.prompt();
                 if (self.abort) self.abort.die();
             },
-            env: new LambdaJS.Env(),
-            parse: function(cmd){ return self.env.evalLine(cmd); }
+            parseDefault: function(cmd){ return self.env.evalLine(cmd); }
         };
+        self.cont = cont || self.contDefault;
+        self.parse = self.parseDefault;
         self.makeAbortButton = function() {
             var parent = self.console.view.parentNode;
             var pos = UI.getPosition(parent);
@@ -229,7 +231,6 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     var div = UI.$new('div', { klass: 'console' });
                     parent.appendChild(div);
                     var repl = self.repl = new ns.Repl(div, function() {});
-                    repl.cont = function(){ repl.abort && repl.abort.die(); };
                     var get = function(k){ return UI.$('input-'+k).value; };
                     repl.getStrategy = function() {
                         var st = self.st || get('strategy') || 'Leftmost';
@@ -242,14 +243,21 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                         var wait = get('wait');
                         return (typeof wait != 'undefined') ? wait : 500;
                     };
-                    repl.parse = function(c){ return repl.env.evalLines(c); };
                 }
-                self.repl.console.clear();
-                self.repl.console.insert([
-                    '[', self.repl.getStrategy().name,
-                    '/', self.repl.getPP().name,
+                var repl = self.repl;
+                repl.cont = function() {
+                    if (repl.abort) repl.abort.die();
+                    repl.cont = repl.contDefault;
+                    repl.parse = repl.parseDefault;
+                    repl.console.prompt();
+                };
+                repl.parse = function(c){ return repl.env.evalLines(c); };
+                repl.console.clear();
+                repl.console.insert([
+                    '[', repl.getStrategy().name,
+                    '/', repl.getPP().name,
                     ']'].join(' '));
-                self.repl.console.command(self.code);
+                repl.console.command(self.code);
             };
             return self;
         };
