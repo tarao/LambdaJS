@@ -80,15 +80,16 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
     ns.AbortButton = function(parent, style, callback) {
         var self = function(){ return self.aborted; };
         self.aborted = false;
+        self.doAbort = function() {
+            self.aborted=true;
+            callback();
+        };
         self.button = UI.$new('a', { klass: 'abort', style: style, child: [
             UI.$new('span', { klass: 'icon', child: '\u2716' }),
             'abort'
         ] });
         parent.appendChild(self.button);
-        UI.addEvent(self.button, 'onclick', function() {
-            self.aborted=true;
-            callback();
-        });
+        UI.addEvent(self.button, 'onclick', self.doAbort);
         self.die = function() {
             if (!self.died) parent.removeChild(self.button);
             self.died = true;
@@ -226,25 +227,29 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             self.toJavaScript18 = function() {
             };
             self.run = function() {
-                if (!self.repl) {
-                    var parent = self.node.parentNode.parentNode;
-                    var div = UI.$new('div', { klass: 'console' });
-                    parent.appendChild(div);
-                    var repl = self.repl = new ns.Repl(div, function() {});
-                    var get = function(k){ return UI.$('input-'+k).value; };
-                    repl.getStrategy = function() {
-                        var st = self.st || get('strategy') || 'Leftmost';
-                        return new LambdaJS.Strategy[st];
-                    };
-                    repl.getPP = function() {
-                        return new LambdaJS.PP[get('pp') || 'JavaScript'];
-                    };
-                    repl.getWait = function() {
-                        var wait = get('wait');
-                        return (typeof wait != 'undefined') ? wait : 500;
-                    };
+                var parent = self.node.parentNode.parentNode;
+                if (self.repl) {
+                    self.repl.abort.doAbort();
+                    parent.removeChild(UI.$('result-'+self.node.id));
                 }
-                var repl = self.repl;
+                var div = UI.$new('div', {
+                    klass: 'console', id: 'result-'+self.node.id
+                });
+                parent.appendChild(div);
+                var repl = self.repl = new ns.Repl(div, function() {});
+                var get = function(k){ return UI.$('input-'+k).value; };
+                repl.getStrategy = function() {
+                    var st = self.st || get('strategy') || 'Leftmost';
+                    return new LambdaJS.Strategy[st];
+                };
+                repl.getPP = function() {
+                    return new LambdaJS.PP[get('pp') || 'JavaScript'];
+                };
+                repl.getWait = function() {
+                    var wait = get('wait');
+                    return (typeof wait != 'undefined') ? wait : 500;
+                };
+                repl.env = new LambdaJS.Env();
                 repl.cont = function() {
                     if (repl.abort) repl.abort.die();
                     repl.cont = repl.contDefault;
