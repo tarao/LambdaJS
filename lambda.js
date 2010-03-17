@@ -306,13 +306,13 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             while (str.length) {
                 var first = str.charAt(0);
-                if (/[({[]/.test(first)) {
+                if (/[\(\{\[]/.test(first)) {
                     var index = self.matchParen(str);
                     arr.push([
                         first, rec(str.substring(1, index)), str.charAt(index)
                     ].join(''));
                     str = str.substring(index+1);
-                } else if (/^function\s*\(([^)]*)\)(.*)$/.test(str)) {
+                } else if (/^function\s*\(([^\)]*)\)(.*)$/.test(str)) {
                     var args = RegExp.$1;
                     var body = RegExp.$2;
                     escaped = args.split(/,/).map(function(arg) {
