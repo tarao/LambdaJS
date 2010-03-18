@@ -223,9 +223,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 app = app.clone();
                 app.fun = self._mark(app.fun);
                 if (app.fun.type != 'Abs') return app;
-                if (!self.marked) {
-                    app.arg = self.markArg(app.arg);
-                }
+                if (!self.marked) app.arg = self.markArg(app.arg);
                 if (!self.marked) {
                     self.marked = true;
                     app.marked = true;
