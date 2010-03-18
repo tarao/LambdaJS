@@ -108,13 +108,9 @@ if (typeof UI == 'undefined') var UI = {};
         ns.AbortButton = function(parent, style, callback) {
             var self = function(){ return self.aborted; };
             self.aborted = false;
-            self.doAbort = function() {
-                self.aborted=true;
-                callback();
-            };
+            self.doAbort = function(){ self.aborted=true; callback(); };
             self.button = $new('a', { klass: 'abort', style: style, child: [
-                $new('span', { klass: 'icon', child: '\u2716' }),
-                'abort'
+                $new('span', { klass: 'icon', child: '\u2716' }), 'abort'
             ] });
             parent.appendChild(self.button);
             addEvent(self.button, 'onclick', self.doAbort);
