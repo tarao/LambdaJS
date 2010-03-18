@@ -58,22 +58,6 @@ if (typeof UI == 'undefined') var UI = {};
         if (last) node.removeChild(last);
         node.appendChild(child);
     };
-    ns.History = function(hist, index) {
-        var self = { hist: hist||[], index: index||-1 };
-        self.prev = function() {
-            if (self.index < self.hist.length) self.index++;
-            return self.hist[self.index] || '';
-        };
-        self.next = function() {
-            if (self.index >= 0) self.index--;
-            return self.hist[self.index] || '';
-        };
-        self.push = function(item) {
-            if (item && self.hist[0] != item) self.hist.unshift(item);
-        };
-        self.clone = function(){ return ns.History(self.hist, -1); };
-        return self;
-    };
     with (ns) {
         ns.Selector = function(name, keys, action, dflt) {
             var self = { hash: {} };
@@ -121,6 +105,22 @@ if (typeof UI == 'undefined') var UI = {};
             return self;
         };
         ns.Console = function(elm, cmd) {
+            var History = function(hist, index) {
+                var self = { hist: hist||[], index: index||-1 };
+                self.prev = function() {
+                    if (self.index < self.hist.length) self.index++;
+                    return self.hist[self.index] || '';
+                };
+                self.next = function() {
+                    if (self.index >= 0) self.index--;
+                    return self.hist[self.index] || '';
+                };
+                self.push = function(item) {
+                    if (item && self.hist[0] != item) self.hist.unshift(item);
+                };
+                self.clone = function(){ return History(self.hist, -1); };
+                return self;
+            };
             var self = {
                 view: $new('ul'),
                 promptChar: '>',
@@ -152,8 +152,7 @@ if (typeof UI == 'undefined') var UI = {};
             };
             self.prompt = function() {
                 var p = $new('span', {
-                    klass: 'prompt',
-                    child: self.promptChar
+                    klass: 'prompt', child: self.promptChar
                 });
                 self.input = $new('input');
                 self.input.value = '';
