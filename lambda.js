@@ -77,18 +77,20 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Ast = function(type, args) {
-        var self = function(arg) {
-            return new ns.Semantics.App(self, arg);
-        };
+        var self = function(arg){ return new ns.Semantics.App(self, arg); };
         self.type = type;
-        if (type == 'Abs') {
+        switch (type) {
+        case 'Abs':
             self.body = args[1].call(null, new ns.Semantics.Var(args[0]));
             self.arg = ns.Util.promote(args[0]);
-        } else if (type == 'App') {
+            break;
+        case 'App':
             self.fun = args[0];
             self.arg = ns.Util.promote(args[1]);
-        } else if (type == 'Var') {
+            break;
+        case 'Var':
             self.v = args[0];
+            break;
         }
         return self;
     };
