@@ -102,17 +102,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     return (visitor[m+self.type]||id)(self);
                 }
             });
-            self.toString = function() {
-                if (self.type == 'Abs') {
-                    return '(' +  self.arg + ') ' + self.body;
-                } else if (self.type == 'App') {
-                    return 'App(' + self.fun + ', ' + self.arg + ')';
-                } else if (self.type == 'Var') {
-                    return self.v;
-                } else {
-                    return 'unknown';
-                }
-            };
             return self;
         },
         Abs: function(arg, func) {
