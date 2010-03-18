@@ -1,11 +1,3 @@
-/*
-  TODO:
-  - interactive UI
-  -- resizer on console
-  -- mark alpha conversion?
-  - test in other browsers
-*/
-
 if (typeof LambdaJS == 'undefined') var LambdaJS = {};
 
 (function(ns) {
