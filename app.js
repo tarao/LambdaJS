@@ -198,7 +198,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.cont();
         return self;
     };
-    ns.StaticCode = function() {
+    ns.StaticCode = function(decl) {
         var self = ns.StaticCode;
         self.hash = {};
         self.run = function(id) {
@@ -206,26 +206,64 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             if (code) code.run();
         };
         self.forEach = function(fun) {
-            if (typeof fun == 'string') fun = function(obj){ obj[fun](); };
+            if (typeof fun == 'string') {
+                var name = fun;
+                fun = function(obj){ obj[name](); };
+            }
             for (var id in self.hash) fun(self.hash[id]);
         };
         self.toLambda = function(){ self.forEach('toLambda'); };
         self.toJavaScript = function(){ self.forEach('toJavaScript'); };
         self.toJavaScript18 = function(){ self.forEach('toJavaScript18'); };
-        var Code = function(node) {
-            var self = { node: node, code: node.textContent };
+        var Code = function(node, decl) {
+            var self = { node: node, code: node.textContent, decl: decl };
             (node.className||'').split(/\s+/).forEach(function(name) {
                 name = name.split('-').map(function(s) {
                     return s.charAt(0).toUpperCase()+s.substring(1);
                 }).join('');
                 if (name in LambdaJS.Strategy) self.st = name;
             });
-            self.toLambda = function() {
+            var conv = function(pp, decl, code) {
+                return code.split('\n').map(function(l) {
+                    var expr = l; var pre = ''; var post = '';
+                    if (/^(var|let)\s+([^\s=]+)\s*=\s*(.*)$/.test(expr)) {
+                        var d = RegExp.$1; var v = RegExp.$2; expr = RegExp.$3;
+                        pre = [ decl(d), v, '=', '' ].join(' ');
+                    }
+                    if (new RegExp('^([^;]*)(;.*)$').test(expr) ||
+                        new RegExp('^(.*?)( //.*)$').test(expr) ||
+                        new RegExp('^()(//.*)$').test(expr)) {
+                        expr = RegExp.$1; post = RegExp.$2;
+                    }
+                    var env = new LambdaJS.Env();
+                    try {
+                        if (expr.length > 0) {
+                            expr = env.evalLine(expr);
+                            expr = expr || { pp: function(){ return ''; } };
+                            expr = pp.pp(expr).textContent;
+                        }
+                        return pre+expr+post;
+                    } catch (e) {
+                        return e.message;
+                    }
+                }).join('\n');
             };
+            self.t = function(what) {
+                if (!self['code'+what]) {
+                    var pp = new LambdaJS.PP[what]();
+                    self['code'+what] = conv(pp, self.decl, self.code);
+                }
+                UI.removeAllChildren(self.node);
+                self.node.appendChild(UI.$text(self['code'+what]));
+                return self['code'+what];
+            };
+            self.toLambda = function(){ return self.t('Lambda'); };
             self.toJavaScript = function() {
+                UI.removeAllChildren(self.node);
+                self.node.appendChild(UI.$text(self.code));
+                return self.code;
             };
-            self.toJavaScript18 = function() {
-            };
+            self.toJavaScript18 = function(){ return self.t('JavaScript18'); };
             self.run = function() {
                 var parent = self.node.parentNode.parentNode;
                 if (self.repl) {
@@ -272,7 +310,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             var node;
             if (links[i].id.match(/^run-(.+)/) && (node=UI.$(RegExp.$1))) {
                 links[i].href = "javascript:"+name+".run('"+node.id+"')";
-                self.hash[node.id] = new Code(node);
+                self.hash[node.id] = new Code(node, decl);
             }
         }
         return self;
@@ -286,7 +324,9 @@ function init(id) {
                    isJS18Enabled() ? 'javascript' : 'javascript18');
 
         // examples
-        var examples = new StaticCode();
+        var declLet = function(){ return 'let'; };
+        var declVar = function(){ return 'var'; };
+        var examples = new StaticCode(isJS18Enabled() ? declLet : declVar);
 
         // REPL
         var elm = document.getElementById(id);
@@ -308,6 +348,7 @@ function init(id) {
                 return new LambdaJS.PP[key];
             };
             UI.$('input-pp').value = key;
+            examples['to'+key]();
             if (repl.console.input) repl.console.input.focus();
         }, UI.$('input-pp').value || 'JavaScript');
 

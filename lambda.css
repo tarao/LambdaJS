@@ -214,6 +214,7 @@ ul.select li.selected a:visited:hover
 #syntax th, #syntax td
 {
   padding: .5em;
+  vertical-align: top;
 }
 
 #syntax th, #syntax th a
@@ -228,6 +229,11 @@ ul.select li.selected a:visited:hover
   background-color: #eeeeee;
 }
 
+#syntax dl
+{
+  margin: 0;
+}
+
 #syntax code
 {
   display: inline;
@@ -239,4 +245,16 @@ ul.select li.selected a:visited:hover
 #syntax code var
 {
   font-style: italic;
+}
+
+#example dt
+{
+  display: inline;
+  padding: .1em .5em;
+  font-weight: bold;
+  color: black;
+  background-color: #eeeeee;
+  border-width: .15em;
+  border-color: #666666;
+  border-style: dashed none dashed none;
 }

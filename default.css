@@ -69,8 +69,17 @@ h1
 {
   font-size: 150%;
   margin: 1em 0;
-  border: solid 0.2em #333333;
+  border-width: 0.2em;
+  border-color: #333333;
   border-style: none none double none;
+}
+
+h1:first-letter
+{
+  color: white;
+  background-color: #333333;
+  padding: 0.2em 0.4em;
+  margin-right: 0.1em;
 }
 
 h2
