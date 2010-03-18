@@ -75,6 +75,55 @@ if (typeof UI == 'undefined') var UI = {};
         return self;
     };
     with (ns) {
+        ns.Selector = function(name, keys, action, dflt) {
+            var self = { hash: {} };
+            for (var k in keys) self.hash[keys[k].name] = { key: k };
+            self.ul = $(name) || $new('ul', { id: name });
+            for (var label in self.hash) {
+                var key = self.hash[label].key;
+                var selected = (key==dflt || label==dflt);
+                var a = $new('a', { child: label });
+                var li = $new('li', {
+                    id: name+key, klass: selected ? 'selected' : '', child: a
+                });
+                self.ul.appendChild(self.hash[label].li = li);
+                if (selected) action(key);
+                addEvent(a, 'onclick', (function(li) {
+                    return function(e) {
+                        for (var label in self.hash) {
+                            if (label == li.textContent) {
+                                li.className = 'selected';
+                                action(self.hash[label].key);
+                            } else {
+                                self.hash[label].li.className = '';
+                            }
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                    };
+                })(li));
+            }
+            return self;
+        };
+        ns.AbortButton = function(parent, style, callback) {
+            var self = function(){ return self.aborted; };
+            self.aborted = false;
+            self.doAbort = function() {
+                self.aborted=true;
+                callback();
+            };
+            self.button = $new('a', { klass: 'abort', style: style, child: [
+                $new('span', { klass: 'icon', child: '\u2716' }),
+                'abort'
+            ] });
+            parent.appendChild(self.button);
+            addEvent(self.button, 'onclick', self.doAbort);
+            self.die = function() {
+                if (!self.died) parent.removeChild(self.button);
+                self.died = true;
+            };
+            return self;
+        };
         ns.Console = function(elm, cmd) {
             var self = {
                 view: $new('ul'),

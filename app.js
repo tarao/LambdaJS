@@ -40,62 +40,6 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             }
         }
     };
-    ns.Selector = function(cat, action, dflt) {
-        var self = { hash: {} };
-        for (var key in LambdaJS[cat]) {
-            var obj = new LambdaJS[cat][key]();
-            self.hash[obj.name] = { key: key };
-        }
-        var name = cat.toLowerCase();
-        with (UI) {
-            var ul = $(name);
-            for (var label in self.hash) {
-                var key = self.hash[label].key;
-                var selected = (key==dflt || label==dflt);
-                var a = $new('a', { child: label }); a.href = '.';
-                var li = $new('li', {
-                    id: name+key, klass: selected ? 'selected' : '', child: a
-                });
-                self.hash[label].li = li;
-                ul.appendChild(li);
-                if (selected) action(key);
-                addEvent(a, 'onclick', (function(li) {
-                    return function(e) {
-                        for (var label in self.hash) {
-                            if (label == li.textContent) {
-                                li.className = 'selected';
-                                action(self.hash[label].key);
-                            } else {
-                                self.hash[label].li.className = '';
-                            }
-                        }
-                        e.preventDefault();
-                        e.stopPropagation();
-                    };
-                })(li));
-            }
-            return self;
-        }
-    };
-    ns.AbortButton = function(parent, style, callback) {
-        var self = function(){ return self.aborted; };
-        self.aborted = false;
-        self.doAbort = function() {
-            self.aborted=true;
-            callback();
-        };
-        self.button = UI.$new('a', { klass: 'abort', style: style, child: [
-            UI.$new('span', { klass: 'icon', child: '\u2716' }),
-            'abort'
-        ] });
-        parent.appendChild(self.button);
-        UI.addEvent(self.button, 'onclick', self.doAbort);
-        self.die = function() {
-            if (!self.died) parent.removeChild(self.button);
-            self.died = true;
-        };
-        return self;
-    };
     ns.Repl = function(elm, cont) {
         var self = {
             getWait: function(){ return 500; },
@@ -117,7 +61,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.makeAbortButton = function() {
             var parent = self.console.view.parentNode;
             var pos = UI.getPosition(parent);
-            self.abort = new ns.AbortButton(parent, {
+            self.abort = new UI.AbortButton(parent, {
                 position: 'absolute'
             }, function() {
                 if (self.marker) {
@@ -274,7 +218,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     klass: 'console', id: 'result-'+self.node.id
                 });
                 parent.appendChild(div);
-                var repl = self.repl = new ns.Repl(div, function() {});
+                var repl = self.repl = new ns.Repl(div, function(){});
                 var get = function(k){ return UI.$('input-'+k).value; };
                 repl.getStrategy = function() {
                     var st = self.st || get('strategy') || 'Leftmost';
@@ -287,7 +231,6 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     var wait = get('wait');
                     return (typeof wait != 'undefined') ? wait : 500;
                 };
-                repl.env = new LambdaJS.Env();
                 repl.cont = function() {
                     if (repl.abort) repl.abort.die();
                     repl.cont = repl.contDefault;
@@ -295,11 +238,10 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     repl.console.prompt();
                 };
                 repl.parse = function(c){ return repl.env.evalLines(c); };
-                repl.console.clear();
                 repl.console.insert([
                     '[', repl.getStrategy().name,
                     '/', repl.getPP().name,
-                    ']'].join(' '));
+                    ']' ].join(' '));
                 repl.console.command(self.code);
             };
             return self;
@@ -326,29 +268,31 @@ function init(id) {
         // examples
         var declLet = function(){ return 'let'; };
         var declVar = function(){ return 'var'; };
-        var examples = new StaticCode(isJS18Enabled() ? declLet : declVar);
+        var exmpls = new StaticCode(isJS18Enabled() ? declLet : declVar);
 
         // REPL
         var elm = document.getElementById(id);
         var repl = new Repl(elm);
 
+        var makeSelector = function(what, dflt, extra) {
+            extra = extra || function(){};
+            var lc = what.toLowerCase();
+            var cat = LambdaJS[what]; var hash = {};
+            for (var k in cat) hash[k] = { name: new cat[k]().name };
+            new UI.Selector(lc, hash, function(key) {
+                repl['get'+what] = function(){ return new cat[key]; };
+                UI.$('input-'+lc).value = key;
+                extra(key);
+                if (repl.console.input) repl.console.input.focus();
+            }, UI.$('input-'+lc).value || dflt);
+        };
+
         // strategy
-        new Selector('Strategy', function(key) {
-            repl.getStrategy = function() {
-                return new LambdaJS.Strategy[key];
-            };
-            UI.$('input-strategy').value = key;
-            if (repl.console.input) repl.console.input.focus();
-        }, UI.$('input-strategy').value || 'Leftmost');
+        makeSelector('Strategy', 'Leftmost');
 
         // output
         if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
-        new Selector('PP', function(key) {
-            repl.getPP = function(){ return new LambdaJS.PP[key]; };
-            UI.$('input-pp').value = key;
-            examples['to'+key]();
-            if (repl.console.input) repl.console.input.focus();
-        }, UI.$('input-pp').value || 'JavaScript');
+        makeSelector('PP', 'JavaScript', function(key){ exmpls['to'+key](); });
 
         // wait
         var ul = UI.$('pp');

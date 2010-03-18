@@ -168,6 +168,7 @@ ul.select li.label
 
 ul.select li a
 {
+  cursor: pointer;
   margin: 0;
   padding: 0 .3em;
   font-weight: bold;
@@ -177,8 +178,7 @@ ul.select li a
   -moz-border-radius: .3em;
 }
 
-ul.select li a:link:hover,
-ul.select li a:visited:hover
+ul.select li a:hover
 {
   color: #9999ee;
   background-color: #e0e0f0;
