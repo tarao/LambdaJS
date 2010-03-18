@@ -344,9 +344,7 @@ function init(id) {
         // output
         if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
         new Selector('PP', function(key) {
-            repl.getPP = function() {
-                return new LambdaJS.PP[key];
-            };
+            repl.getPP = function(){ return new LambdaJS.PP[key]; };
             UI.$('input-pp').value = key;
             examples['to'+key]();
             if (repl.console.input) repl.console.input.focus();
@@ -364,6 +362,5 @@ function init(id) {
         sync();
         ul.appendChild(input);
         repl.getWait = function(){ return input.value; };
-
     }
 };
