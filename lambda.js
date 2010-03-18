@@ -23,10 +23,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     if (/^([^\s]+) is not defined$/.test(e.message)) {
                         code = [
                             [ 'var', RegExp.$1, '=',
-                              "LambdaJS.Util.promote('"+RegExp.$1+"');"
+                              'LambdaJS.Util.promote(\''+RegExp.$1+'\');'
                             ].join(' '),
                             code
-                        ].join("\n");
+                        ].join('\n');
                     } else {
                         throw { message: e.message };
                     }
@@ -34,7 +34,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             }
         };
         self.evalCode = function(code) {
-            code = self.stack.concat([code]).join("\n");
+            code = self.stack.concat([code]).join('\n');
             var ret = self.evalResolvingReference(code);
             if (typeof ret == 'undefined') {
                 self.stack.push(code);
@@ -312,7 +312,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         return "'"+arg+"'";
                     });
                     arr.push([
-                        'fun(['+escaped.join(',')+"],",
+                        'fun(['+escaped.join(',')+'],',
                         'function(', args, ') ',
                         rec(body), ')'
                     ].join(''));

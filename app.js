@@ -309,7 +309,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         for (var i=0; i < links.length; i++) {
             var node;
             if (links[i].id.match(/^run-(.+)/) && (node=UI.$(RegExp.$1))) {
-                links[i].href = "javascript:"+name+".run('"+node.id+"')";
+                links[i].href = 'javascript:'+name+'.run(\''+node.id+'\')';
                 self.hash[node.id] = new Code(node, decl);
             }
         }
