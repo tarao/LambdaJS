@@ -134,7 +134,7 @@
 
 .abort .icon
 {
-  padding: 0 .3em;
+  padding: .1em .3em;
   margin-right: .3em;
   vertical-align: middle;
   text-align: center;
@@ -145,7 +145,7 @@
 .resize-corner
 {
   color: #999999;
-  padding: 2px;
+  padding: 0 4px 4px 0;
 }
 
 #store

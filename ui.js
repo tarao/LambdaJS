@@ -267,8 +267,8 @@ if (typeof UI == 'undefined') var UI = {};
             var px = function(x){ return x+'px'; };
             var getPositonalStyle = function(node, what, post) {
                 var get = function(which) {
-                    return parseInt(getStyle(node, what+which+(post||'')) ||
-                                    getStyle(node, what+(post||'')) || '0');
+                    return parseInt(getStyle(node, what+which+(post||''))||
+                                    getStyle(node, what+(post||''))||'0')||0;
                 };
                 var hash = { left: get('Left'), top: get('Top'),
                              right: get('Right'), bottom: get('Bottom') };
@@ -294,20 +294,20 @@ if (typeof UI == 'undefined') var UI = {};
             var rW = function(d){ resize('parent', 'width', d.x); };
             var rH = function(d){ resize('target', 'height', d.y); };
 
-            var style = {}; var b = getBorder(self.target);
+            var style = {}; var b = getBorder(self.target); var m=px(-2);
             switch (opt.position) {
             case 'right': self.resize = function(d){ rW(d); }; style = {
-                cursor: 'e-resize', zIndex: opt.zIndex, right: 0, top: 0,
-                width: px(b.right||2), height: '100%'
+                cursor: 'e-resize', zIndex: opt.zIndex, right: m, top: 0,
+                width: px((b.right||2)+2), height: '100%'
             }; break;
             case 'bottom': self.resize = function(d){ rH(d); }; style = {
-                cursor: 's-resize', zIndex: opt.zIndex, left: 0, bottom: 0,
-                width: '100%', height: px(b.bottom||2)
+                cursor: 's-resize', zIndex: opt.zIndex, left: 0, bottom: m,
+                width: '100%', height: px((b.bottom||2)+2)
             }; break;
             case 'corner':
             default: self.resize = function(d){ rW(d); rH(d); }; style = {
                 cursor: 'se-resize', zIndex: opt.zIndex,
-                right: 0, bottom: 0
+                right: m, bottom: m
             }; break;
             }
             self.node = $new('div', { style: merge(style, {
