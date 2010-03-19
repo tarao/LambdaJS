@@ -1,7 +1,3 @@
-/*
-  TODO:
-  - Width of input on console.
-*/
 if (typeof UI == 'undefined') var UI = {};
 
 (function(ns) {
@@ -345,8 +341,7 @@ if (typeof UI == 'undefined') var UI = {};
                 return self;
             };
             var self = {
-                view: $new('ul'),
-                promptChar: '>',
+                view: $new('ul'), parent: parent, promptChar: '>',
                 history: new History(),
                 command: cmd || function(){},
                 resizer: {}
@@ -357,7 +352,7 @@ if (typeof UI == 'undefined') var UI = {};
             self.enclosing = parent.parentNode;
             parent.appendChild(self.view);
             self.destroy = function() {
-                self.view.parentNode.removeChild(self.view);
+                self.parent.removeChild(self.view);
                 [ 'corner', 'right', 'bottom' ].forEach(function(which) {
                     self.resizer[which].destroy();
                 });
@@ -375,8 +370,7 @@ if (typeof UI == 'undefined') var UI = {};
                     li.appendChild(node);
                 }
                 self.view.appendChild(li);
-                var parent = self.view.parentNode;
-                parent.scrollTop = parent.scrollHeight;
+                self.parent.scrollTop = self.parent.scrollHeight;
                 return li;
             };
             self.err = function(message) {
@@ -391,6 +385,10 @@ if (typeof UI == 'undefined') var UI = {};
                 self.input = $new('input');
                 self.input.value = '';
                 var li = self.insert(p, self.input);
+                var inputPos = getPosition(self.input);
+                var viewPos = getPosition(self.view);
+                self.inputMargin = inputPos.x - viewPos.x;
+                self.reposition();
                 var history = self.history.clone();
                 new Observer(self.input, 'onkeyup', function(e) {
                     switch (e.event.charCode || e.event.keyCode) {
@@ -398,6 +396,7 @@ if (typeof UI == 'undefined') var UI = {};
                         var text = self.input.value;
                         self.history.push(text);
                         self.view.removeChild(li);
+                        self.input = null;
                         self.insert(p, text).className = 'userinput';
                         self.command(text);
                         break;
@@ -430,6 +429,19 @@ if (typeof UI == 'undefined') var UI = {};
                 self.input.focus();
                 return self;
             };
+            self.reposition = function() {
+                if (self.input) {
+                    var width = self.parent.clientWidth - self.inputMargin;
+                    self.input.style.width = width+'px';
+                }
+            };
+            [ 'corner', 'right', 'bottom' ].forEach(function(p) {
+                var fun = self.resizer[p].resize;
+                self.resizer[p].resize = function() {
+                    fun.apply(self.resizer[p], arguments);
+                    self.reposition();
+                };
+            });
             return self;
         };
     }
