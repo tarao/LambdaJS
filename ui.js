@@ -411,15 +411,16 @@ if (typeof UI == 'undefined') var UI = {};
                     e.stop();
                 });
                 new Observer(self.input, 'onkeydown', function(e) {
-                    switch (e.event.charCode || e.event.keyCode) {
-                    case 'L'.charCodeAt(0): if (!e.ctrlKey) return; // C-L
+                    var evnt = e.event;
+                    switch (evnt.charCode || evnt.keyCode) {
+                    case 'L'.charCodeAt(0): if (!evnt.ctrlKey) return; // C-L
                         self.clear(li);
                         break;
-                    case 'P'.charCodeAt(0): if (!e.ctrlKey) return; // C-P
+                    case 'P'.charCodeAt(0): if (!evnt.ctrlKey) return; // C-P
                     case 38: // up
                         self.input.value = history.prev();
                         break;
-                    case 'N'.charCodeAt(0): if (!e.ctrlKey) return; // C-N
+                    case 'N'.charCodeAt(0): if (!evnt.ctrlKey) return; // C-N
                     case 40: // down
                         self.input.value = history.next();
                         break;
