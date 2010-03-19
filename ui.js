@@ -387,7 +387,7 @@ if (typeof UI == 'undefined') var UI = {};
                 var li = self.insert(p, self.input);
                 var inputPos = getPosition(self.input);
                 var viewPos = getPosition(self.view);
-                self.inputMargin = inputPos.x - viewPos.x;
+                self.inputMargin = inputPos.x - viewPos.x + 2;
                 self.reposition();
                 var history = self.history.clone();
                 new Observer(self.input, 'onkeyup', function(e) {

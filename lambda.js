@@ -20,7 +20,8 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 try {
                     return self.sandbox.run(code);
                 } catch (e) {
-                    if (/^([^\s]+) is not defined$/.test(e.message)) {
+                    if (/^([^\s]+) is not defined$/.test(e.message) ||
+                        /^Can\'t find variable: (.*)$/.test(e.message)) {
                         code = [
                             [ 'var', RegExp.$1, '=',
                               'LambdaJS.Util.promote(\''+RegExp.$1+'\');'
