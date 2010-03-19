@@ -10,36 +10,60 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Env = function() {
+        var Tokens = function(tokens) {
+            var self = { tokens: tokens||[] };
+            self.push = function(t) {
+                if (t != 'fun' && self.tokens.indexOf(t) == -1) {
+                    try {
+                        new ns.Sandbox().run(['var',t,'=','1;'].join(' '));
+                        self.tokens.push(t);
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+                return self;
+            };
+            self.concat = function(other) {
+                other = other || [];
+                var rv = new Tokens(self.tokens.concat([]));
+                if (other.tokens) {
+                    other = rv.tokens.concat(other.tokens).sort();
+                    var last = '';
+                    rv.tokens = other.filter(function(t) {
+                        if (last == t) return false;
+                        last = t;
+                        return true;
+                    });
+                } else {
+                    other.forEach(function(t){ rv.push(t); });
+                }
+                return rv;
+            };
+            self.toCode = function() {
+                return self.tokens.map(function(t) {
+                    var a = ['var',t,'=','LambdaJS.Util.promote(\''+t+'\');'];
+                    return a.join(' ');
+                });
+            };
+            return self;
+        };
+        Tokens.parse = function(str) {
+            var tokens = new Tokens();
+            while (str.length && /([a-zA-Z_$][a-zA-Z0-9_$]*)(.*)$/.test(str)) {
+                str = RegExp.$2;
+                tokens.push(RegExp.$1);
+            }
+            return tokens;
+        };
         var self = {
             parser: new ns.Parser(),
             sandbox: new ns.Sandbox(),
-            stack: []
+            stack: [], predefs: new Tokens()
         };
         self.evalResolvingReference = function(code) {
-            while (true) {
-                try {
-                    return self.sandbox.run(code);
-                } catch (e) {
-                    msg = [
-                        '^(\\S+) is not defined$',
-                        '^Can\'t find variable: (\\S+)$',
-                        '^\'(\\S+)\' \u306F\u5BA3\u8A00\u3055\u308C' +
-                            '\u3066\u3044\u307E\u305B\u3093\u3002$'
-                    ];
-                    if (msg.some(function(m) {
-                        return new RegExp(m).test(e.message);
-                    })) {
-                        code = [
-                            [ 'var', RegExp.$1, '=',
-                              'LambdaJS.Util.promote(\''+RegExp.$1+'\');'
-                            ].join(' '),
-                            code
-                        ].join('\n');
-                    } else {
-                        throw { message: e.message };
-                    }
-                }
-            }
+            self.predefs = self.predefs.concat(Tokens.parse(code));
+            var predefs = self.predefs.toCode();
+            return self.sandbox.run(predefs.concat([code]).join('\n'));
         };
         self.evalCode = function(code) {
             code = self.stack.concat([code]).join('\n');
@@ -284,7 +308,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var self = {};
         self.parse = function(text) {
             return (text||'')
-                .replace(new RegExp('//.*[\r\n]', 'g'), '')
+                .replace(new RegExp('//.*?[\r\n]', 'g'), '')
                 .replace(/[\r\n\t]/g, ' ')
                 .replace(new RegExp('/\\*.*?\\*/', 'g'), '')
                 .split(/;/).map(function(l) {
