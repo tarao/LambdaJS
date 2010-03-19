@@ -16,7 +16,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var appendParen = function(child){ return reduce('(', child, ')'); };
         ns.PP = {
             JavaScript: function() {
-                var self = ns.PP.Lambda();
+                var self = new ns.PP.Lambda();
                 self.pp = self._pp;
                 self.name = 'JavaScript';
                 self.lambda = function(argNodes, bodyNode) {
@@ -40,7 +40,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return self;
             },
             JavaScript18: function() {
-                var self = ns.PP.JavaScript();
+                var self = new ns.PP.JavaScript();
                 self.body = function(body){ return reduce(' ', body); };
                 return self;
             },

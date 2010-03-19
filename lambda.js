@@ -20,8 +20,15 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 try {
                     return self.sandbox.run(code);
                 } catch (e) {
-                    if (/^([^\s]+) is not defined$/.test(e.message) ||
-                        /^Can\'t find variable: (.*)$/.test(e.message)) {
+                    msg = [
+                        '^(\\S+) is not defined$',
+                        '^Can\'t find variable: (\\S+)$',
+                        '^\'(\\S+)\' \u306F\u5BA3\u8A00\u3055\u308C' +
+                            '\u3066\u3044\u307E\u305B\u3093\u3002$'
+                    ];
+                    if (msg.some(function(m) {
+                        return new RegExp(m).test(e.message);
+                    })) {
                         code = [
                             [ 'var', RegExp.$1, '=',
                               'LambdaJS.Util.promote(\''+RegExp.$1+'\');'

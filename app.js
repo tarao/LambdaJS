@@ -162,6 +162,13 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.toJavaScript18 = function(){ self.forEach('toJavaScript18'); };
         var Code = function(node, decl) {
             var self = { node: node, code: node.textContent, decl: decl };
+            if (typeof node.textContent == 'undefined') { // IE fix
+                var s = ''; var len=node.childNodes.length; var child;
+                for (var i=0; i < len && (child=node.childNodes[i]); i++) {
+                    if (child instanceof Text) s += child.toString();
+                }
+                self.code = s;
+            }
             (node.className||'').split(/\s+/).forEach(function(name) {
                 name = name.split('-').map(function(s) {
                     return s.charAt(0).toUpperCase()+s.substring(1);
@@ -169,7 +176,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 if (name in LambdaJS.Strategy) self.st = name;
             });
             var conv = function(pp, decl, code) {
-                return code.split('\n').map(function(l) {
+                return code.split(/[\n\r]/).map(function(l) {
                     var expr = l; var pre = ''; var post = '';
                     if (/^(var|let)\s+([^\s=]+)\s*=\s*(.*)$/.test(expr)) {
                         var d = RegExp.$1; var v = RegExp.$2; expr = RegExp.$3;
@@ -185,7 +192,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                         if (expr.length > 0) {
                             expr = env.evalLine(expr);
                             expr = expr || { pp: function(){ return ''; } };
-                            expr = pp.pp(expr).textContent;
+                            expr = UI.text(pp.pp(expr));
                         }
                         return pre+expr+post;
                     } catch (e) {

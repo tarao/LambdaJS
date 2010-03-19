@@ -10,8 +10,15 @@ if (typeof UI == 'undefined') var UI = {};
         return hash;
     }
     ns.doc = ns.doc || document;
+    ns.isNode = function(obj) {
+        if (obj && typeof obj.nodeType == 'number') {
+            try { obj.nodeType = obj.nodeType } catch(e) { return true; }
+        }
+        return false;
+    };
+    ns.text = function(node){ return node.textContent||node.innerText||''; };
     ns._$ = function(id){ return ns.doc.getElementById(id); };
-    ns.$ = function(id){ return (id instanceof Node) ? id : ns._$(id); };
+    ns.$ = function(id){ return ns.isNode(id) ? id : ns._$(id); };
     ns.$new = function(tag, args) {
         var elm = ns.doc.createElement(tag);
         args = args || {};
@@ -28,9 +35,7 @@ if (typeof UI == 'undefined') var UI = {};
         return elm;
     };
     ns.$text = function(str){ return ns.doc.createTextNode(str); };
-    ns.$node = function(node) {
-        return (node instanceof Node) ? node : ns.$text(node);
-    };
+    ns.$node = function(x){ return ns.isNode(x) ? x : ns.$text(x); };
     ns.removeAllChildren = function(node) {
         while (node.firstChild) node.removeChild(node.firstChild);
     };
@@ -105,17 +110,17 @@ if (typeof UI == 'undefined') var UI = {};
                     self.event.preventDefault();
                 } else {
                     self.event.cancelBubble = true;
-                    self.returnValue = false;
+                    self.event.returnValue = false;
                 }
             };
             return self;
         };
         ns.Observer = function(node, event, fun) {
             var self = { node: node, event: event };
-            if (event.indexOf('on') == 0) self.event = event.substr(2);
             self.fun = function(e){ return  fun(new Event(e)); };
             self.start = function() {
                 if (self.node.addEventListener) {
+                    if (event.indexOf('on') == 0) self.event = event.substr(2);
                     self.node.addEventListener(self.event, self.fun, false);
                 } else if (self.node.attachEvent) {
                     self.node.attachEvent(self.event, self.fun);
@@ -147,7 +152,7 @@ if (typeof UI == 'undefined') var UI = {};
                 new Observer(a, 'onclick', (function(li) {
                     return function(e) {
                         forEach(self.hash, function(label,x) {
-                            if (label == li.textContent) {
+                            if (label == text(li)) {
                                 li.className = 'selected';
                                 action(x.key);
                             } else {
@@ -398,7 +403,7 @@ if (typeof UI == 'undefined') var UI = {};
                         self.view.removeChild(li);
                         self.input = null;
                         self.insert(p, text).className = 'userinput';
-                        self.command(text);
+                        setTimeout(function(){ self.command(text); }, 0);
                         break;
                     default:
                         return;

@@ -1,0 +1,9 @@
+AddType "text/html; charset=utf-8" .xhtml
+
+DirectoryIndex -index.html -index.xhtml
+
+RewriteEngine On
+RewriteRule ^$ index.xhtml [L]
+RewriteCond %{HTTP_ACCEPT} application/xhtml\+xml
+RewriteCond %{LA-F:REQUEST_FILENAME} \.xhtml
+RewriteRule .* - "[T=application/xhtml+xml; charset=utf-8]"
