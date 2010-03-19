@@ -86,12 +86,11 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         fun.body = fun.body.subst(bound, fun.arg);
                     } else if (app.redex) {
                         node = $new('a', { klass: klass + ' redex' });
-                        UI.addEvent(node, 'onclick', function(e) {
+                        new UI.Observer(node, 'onclick', function(e) {
                             app.marked = true;
                             self.callback();
                             self.callback = function(){};
-                            e.preventDefault();
-                            e.stopPropagation();
+                            e.stop();
                         });
                     } else {
                         node = $new('span', { klass: klass });

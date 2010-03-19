@@ -1,7 +1,7 @@
 .console
 {
   height: 8em;
-  overflow-x: hidden;
+  overflow-x: scroll;
   overflow-y: scroll;
   white-space: nowrap;
   border-style: solid;
@@ -105,11 +105,11 @@
   margin-right: .5em;
 }
 
-.console .abort
+.abort
 {
   cursor: pointer;
-  padding: 0 .3em;
-  margin: .5em 0;
+  padding: .3em;
+  margin: 4px 0 0 0;
   border: solid 4px #333333;
   background-color: #444444;
   color: #ffffff;
@@ -118,28 +118,34 @@
   font-weight: bold;
 }
 
-.console .abort:hover
+.abort:hover
 {
   outline-style: none;
   border-color: #666666;
   background-color: #999999;
 }
 
-.console .abort:active,
-.console .abort:active:hover
+.abort:active,
+.abort:active:hover
 {
   outline-style: none;
   border-color: #ffcccc;
 }
 
-.console .abort .icon
+.abort .icon
 {
-  padding: .1em;
+  padding: 0 .3em;
   margin-right: .3em;
   vertical-align: middle;
   text-align: center;
   background-color: #990000;
   -moz-border-radius: 4px;
+}
+
+.resize-corner
+{
+  color: #999999;
+  padding: 2px;
 }
 
 #store

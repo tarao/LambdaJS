@@ -59,8 +59,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.cont = cont || self.contDefault;
         self.parse = self.parseDefault;
         self.makeAbortButton = function() {
-            var parent = self.console.view.parentNode;
-            var pos = UI.getPosition(parent);
+            var parent = self.console.enclosing;
             self.abort = new UI.AbortButton(parent, {
                 position: 'absolute'
             }, function() {
@@ -70,10 +69,12 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 }
                 self.cont();
             });
-            pos.x += parent.offsetWidth-self.abort.button.offsetWidth;
-            pos.y += parent.offsetHeight;
-            self.abort.button.style.left = pos.x+'px';
-            self.abort.button.style.top = pos.y+'px';
+            var btn = self.abort.button;
+            var height = btn.offsetHeight;
+            var val = function(p){ return parseInt(UI.getStyle(btn, p))||0; };
+            height += val('borderTopWidth') || val('borderWidth');
+            height += val('marginTop') || val('margin');
+            btn.style.right = 0; btn.style.bottom = (-height)+'px';
         };
         self.console = new UI.Console(elm, function(cmd) {
             self.sandbox(function() {
@@ -212,6 +213,8 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 var parent = self.node.parentNode.parentNode;
                 if (self.repl) {
                     self.repl.abort.doAbort();
+                    parent = self.repl.console.enclosing;
+                    self.repl.console.destroy();
                     parent.removeChild(UI.$('result-'+self.node.id));
                 }
                 var div = UI.$new('div', {
@@ -299,8 +302,8 @@ function init(id) {
         ul.appendChild(UI.$new('li', { klass: 'label', child: 'Wait:' }));
         var input = UI.$new('input', { id: 'wait' });
         var sync = function(){ UI.$('input-wait').value = input.value; };
-        UI.addEvent(input, 'onchange', sync);
-        UI.addEvent(input, 'onkeyup', sync);
+        new UI.Observer(input, 'onchange', sync);
+        new UI.Observer(input, 'onkeyup', sync);
         var w = UI.$('input-wait').value;
         input.value = w.length ? w : 500;
         sync();
