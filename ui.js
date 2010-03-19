@@ -130,7 +130,7 @@ if (typeof UI == 'undefined') var UI = {};
                 if (self.node.removeEventListener) {
                     self.node.removeEventListener(self.event, self.fun, false);
                 } else if (self.node.detachEvent) {
-                    sself.node.detachEvent(self.event, self.fun);
+                    self.node.detachEvent(self.event, self.fun);
                 }
             }
             self.start();
