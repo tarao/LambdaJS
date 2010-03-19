@@ -431,7 +431,7 @@ if (typeof UI == 'undefined') var UI = {};
             };
             self.reposition = function() {
                 if (self.input) {
-                    var width = self.parent.clientWidth - self.inputMargin;
+                    var width = self.view.offsetWidth - self.inputMargin;
                     self.input.style.width = width+'px';
                 }
             };
