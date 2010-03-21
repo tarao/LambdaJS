@@ -52,8 +52,8 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return self.sandbox.run(predefs.concat([code]).join('\n'));
         };
         self.evalCode = function(code) {
-            code = self.stack.concat([code]).join('\n');
-            var ret = self.evalResolvingReference(code);
+            var joined = self.stack.concat([code]).join('\n');
+            var ret = self.evalResolvingReference(joined);
             if (typeof ret == 'undefined') {
                 self.stack.push(code);
             }
