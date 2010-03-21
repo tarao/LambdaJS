@@ -13,31 +13,24 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         var Tokens = function(tokens) {
             var self = { tokens: tokens||[] };
             self.push = function(t) {
-                if (t != 'fun' && self.tokens.indexOf(t) == -1) {
+                if (t != 'fun' && self.tokens.indexOf(t) == -1 &&
+                    Tokens.keywords.indexOf(t) == -1) {
                     try {
                         new ns.Sandbox().run(['var',t,'=','1;'].join(' '));
                         self.tokens.push(t);
                     } catch (e) {
-                        // ignore
+                        Tokens.keywords.push(t);
                     }
                 }
                 return self;
             };
-            self.concat = function(other) {
-                other = other || [];
-                var rv = new Tokens(self.tokens.concat([]));
-                if (other.tokens) {
-                    other = rv.tokens.concat(other.tokens).sort();
-                    var last = '';
-                    rv.tokens = other.filter(function(t) {
-                        if (last == t) return false;
-                        last = t;
-                        return true;
-                    });
-                } else {
-                    other.forEach(function(t){ rv.push(t); });
+            self.parse = function(str) {
+                while (str.length &&
+                       /([a-zA-Z_$][a-zA-Z0-9_$]*)(.*)$/.test(str)) {
+                    str = RegExp.$2;
+                    self.push(RegExp.$1);
                 }
-                return rv;
+                return self;
             };
             self.toCode = function() {
                 return self.tokens.map(function(t) {
@@ -47,21 +40,14 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             return self;
         };
-        Tokens.parse = function(str) {
-            var tokens = new Tokens();
-            while (str.length && /([a-zA-Z_$][a-zA-Z0-9_$]*)(.*)$/.test(str)) {
-                str = RegExp.$2;
-                tokens.push(RegExp.$1);
-            }
-            return tokens;
-        };
+        Tokens.keywords = [];
         var self = {
             parser: new ns.Parser(),
             sandbox: new ns.Sandbox(),
             stack: [], predefs: new Tokens()
         };
         self.evalResolvingReference = function(code) {
-            self.predefs = self.predefs.concat(Tokens.parse(code));
+            self.predefs.parse(code);
             var predefs = self.predefs.toCode();
             return self.sandbox.run(predefs.concat([code]).join('\n'));
         };
