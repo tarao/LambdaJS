@@ -110,22 +110,28 @@ if (typeof UI == 'undefined') var UI = {};
             };
             return self;
         };
-        ns.Observer = function(node, event, fun) {
+        ns.Observer = function(node, event, obj, m) {
             var self = { node: node, event: event };
-            self.fun = function(e){ return  fun(new Event(e)); };
+            var fun = obj;
+            if (typeof m == 'string') {
+                fun = obj[m];
+            } else if (typeof m != 'undefined') {
+                fun = m;
+            }
+            var callback = function(e){ return fun.call(obj, new Event(e)); };
             self.start = function() {
                 if (self.node.addEventListener) {
                     if (event.indexOf('on') == 0) self.event = event.substr(2);
-                    self.node.addEventListener(self.event, self.fun, false);
+                    self.node.addEventListener(self.event, callback, false);
                 } else if (self.node.attachEvent) {
-                    self.node.attachEvent(self.event, self.fun);
+                    self.node.attachEvent(self.event, callback);
                 }
             };
             self.stop = function() {
                 if (self.node.removeEventListener) {
-                    self.node.removeEventListener(self.event, self.fun, false);
+                    self.node.removeEventListener(self.event, callback, false);
                 } else if (self.node.detachEvent) {
-                    self.node.detachEvent(self.event, self.fun);
+                    self.node.detachEvent(self.event, callback);
                 }
             }
             self.start();
@@ -168,7 +174,7 @@ if (typeof UI == 'undefined') var UI = {};
                 $new('span', { klass: 'icon', child: '\u2716' }), 'abort'
             ] });
             parent.appendChild(self.button);
-            new Observer(self.button, 'onclick', self.doAbort);
+            new Observer(self.button, 'onclick', self, 'doAbort');
             self.die = function() {
                 if (!self.died) parent.removeChild(self.button);
                 self.died = true;
@@ -203,8 +209,8 @@ if (typeof UI == 'undefined') var UI = {};
                 self.pos.cursor = e.mousePos();
                 if (self.callback.start(self.node, e, self.pos.cursor)) {
                     self.pos.node = getPosition(self.node);
-                    self.o = [ new Observer(doc, 'onmousemove', self.move),
-                               new Observer(doc, 'onmouseup', self.stop) ];
+                    self.o = [ new Observer(doc, 'onmousemove', self, 'move'),
+                               new Observer(doc, 'onmouseup', self, 'stop') ];
                     e.stop();
                 }
             };
@@ -231,7 +237,8 @@ if (typeof UI == 'undefined') var UI = {};
             self.dispose = function(){ self.stopListening(); };
             self.startListening = function() {
                 if (self.isListening()) return;
-                self.l = new Observer(self.attach, 'onmousedown', self.start);
+                self.l = new Observer(self.attach, 'onmousedown',
+                                      self, 'start');
             };
             self.stopListening = function(abort) {
                 if (!self.isListening()) return;
