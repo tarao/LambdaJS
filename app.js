@@ -50,9 +50,13 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 return new LambdaJS.PP.Lambda();
             },
             env: new LambdaJS.Env(),
+            destruct: function() {
+                delete self.strategy; delete self.marker; delete self.exp;
+                if (self.abort) self.abort.die();
+            },
             contDefault: function() {
                 self.console.prompt();
-                if (self.abort) self.abort.die();
+                self.destruct();
             },
             parseDefault: function(cmd){ return self.env.evalLine(cmd); }
         };
@@ -242,7 +246,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                     return (typeof wait != 'undefined') ? wait : 500;
                 };
                 repl.cont = function() {
-                    if (repl.abort) repl.abort.die();
+                    repl.destruct();
                     repl.cont = repl.contDefault;
                     repl.parse = repl.parseDefault;
                     repl.console.prompt();
