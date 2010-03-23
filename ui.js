@@ -10,12 +10,7 @@ if (typeof UI == 'undefined') var UI = {};
         return hash;
     }
     ns.doc = ns.doc || document;
-    ns.isNode = function(obj) {
-        if (obj && typeof obj.nodeType == 'number') {
-            try { obj.nodeType = obj.nodeType } catch(e) { return true; }
-        }
-        return false;
-    };
+    ns.isNode = function(x){ return x && typeof x.nodeType == 'number'; };
     ns.text = function(node){ return node.textContent||node.innerText||''; };
     ns._$ = function(id){ return ns.doc.getElementById(id); };
     ns.$ = function(id){ return ns.isNode(id) ? id : ns._$(id); };
