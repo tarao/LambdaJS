@@ -95,16 +95,18 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
     };
 
     ns.Ast = function(type, args) {
-        var self = function(arg){ return new ns.Semantics.App(self, arg); };
+        var self = function(arg) {
+            return new ns.Semantics.App(self, ns.Util.promote(arg).clone());
+        };
         self.type = type;
         switch (type) {
         case 'Abs':
-            self.body = args[1].call(null, new ns.Semantics.Var(args[0]));
             self.arg = ns.Util.promote(args[0]);
+            self.body = args[1].call(null, new ns.Semantics.Var(args[0]));
             break;
         case 'App':
             self.fun = args[0];
-            self.arg = ns.Util.promote(args[1]);
+            self.arg = args[1];
             break;
         case 'Var':
             self.v = args[0];
@@ -135,7 +137,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 if (v.v == self.arg.v) return self; // (\x.M)[x:=N] = \x.M
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
-                var abs = self.clone();
+                var abs = self;
                 if (fv1[v.v||self.arg.v] && fv2[self.arg.v]) {
                     // alpha conversion
                     fv2[v.v||self.arg.v] = true;
@@ -143,7 +145,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     abs.body = abs.body.subst(fresh, abs.arg);
                     abs.arg = abs.arg.subst(fresh, abs.arg);
                 }
-                abs.body = abs.body.subst(arg, v);
+                abs.body = abs.body.subst(arg.clone(), v);
                 return abs;
             };
             self.fv = function() {
@@ -163,9 +165,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return c;
             };
             self.subst = function(arg, v) {
-                var app = self.clone();
+                var app = self;
                 app.fun = app.fun.subst(arg, v);
-                app.arg = app.arg.subst(arg, v);
+                app.arg = app.arg.subst(arg.clone(), v);
                 return app;
             };
             self.fv = function() {
@@ -198,12 +200,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = new ns.Strategy.CallByName();
             self.name = 'leftmost';
             self.markAbs = function(abs) {
-                abs = abs.clone();
                 abs.body = self._mark(abs.body);
                 return abs;
             };
             self.markApp = function(app) {
-                app = app.clone();
                 if (app.fun.type == 'Abs') {
                     self.marked = true;
                     app.marked = true;
@@ -229,7 +229,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return ns.Util.promote(exp).mark(self);
             };
             self.markApp = function(app) {
-                app = app.clone();
                 app.fun = self._mark(app.fun);
                 if (app.fun.type != 'Abs') return app;
                 if (!self.marked) app.arg = self.markArg(app.arg);
@@ -272,12 +271,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = new ns.Strategy.CallByName();
             self.name = 'manual';
             self.markAbs = function(abs) {
-                abs = abs.clone();
                 abs.body = self._mark(abs.body);
                 return abs;
             };
             self.markApp = function(app) {
-                app = app.clone();
                 if (app.fun.type == 'Abs') {
                     self.marked = true;
                     app.redex = true;

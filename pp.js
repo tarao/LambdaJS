@@ -74,6 +74,25 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         return append(argNode);
                     }
                 };
+                self.markBound = function(exp, v) {
+                    switch (exp.type) {
+                    case 'Var':
+                        if (exp.v == v.v) {
+                            (exp = exp.clone()).bound=true;
+                        }
+                        break;
+                    case 'App':
+                        exp.fun = self.markBound(exp.fun, v);
+                        exp.arg = self.markBound(exp.arg, v);
+                        break;
+                    case 'Abs':
+                        if (exp.arg.v != v.v) {
+                            exp.body = self.markBound(exp.body, v);
+                        }
+                        break;
+                    }
+                    return exp;
+                };
                 self.ppApp = function(app) {
                     var fun = app.fun;
                     var arg = app.arg;
@@ -81,9 +100,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     var node;
                     if (app.marked) {
                         node = $new('span', { klass: klass + ' marked' });
-                        var bound = app.fun.arg.clone();
-                        bound.bound = true;
-                        fun.body = fun.body.subst(bound, fun.arg);
+                        fun.body = self.markBound(fun.body, fun.arg);
                     } else if (app.redex) {
                         node = $new('a', { klass: klass + ' redex' });
                         new UI.Observer(node, 'onclick', function(e) {
