@@ -138,7 +138,6 @@ var _2 = function(s,z){ return s(s(z)) };
 var _3 = function(s,z){ return s(s(s(z))) };
 
 var add = function(m,n,s,z){ return m(s)(n(s)(z)) };
-var mul = function(m,n,s,z){ return n(m(s))(z) };
 
 add(_2)(_3)</code></pre>
       </dd></dl>
@@ -157,9 +156,9 @@ fst(snd(p1))</code></pre>
 
       <dl><dt>code11</dt>
       <dd>
-        <pre><code id="code11">var t = function(x,y){ return x };
-var f = function(x,y){ return y };
-var cond = function(B,P,Q){ return B(P)(Q) };
+        <pre><code id="code11">var t = function(x,y){ return x }; // true
+var f = function(x,y){ return y }; // false
+var cond = function(B,P,Q){ return B(P)(Q) }; // if-then-else
 cond(t)(a)(b) // if true then a else b</code></pre>
       </dd></dl>
       <p><a id="run-code11" href=".">run code11</a></p>
@@ -173,15 +172,15 @@ var _1 = function(s,z){ return s(z) };
 var _2 = function(s,z){ return s(s(z)) };
 var _3 = function(s,z){ return s(s(s(z))) };
 
-var t = function(x,y){ return x };
-var f = function(x,y){ return y };
-var ifzero = function(n){ return n(function(x){ return f })(t) };
+var t = function(x,y){ return x }; // true
+var f = function(x,y){ return y }; // false
+var if0 = function(n){ return n(function(x){ return f })(t) }; // if n equals to _0
 
 var mul = function(m,n,s,z){ return n(m(s))(z) };
 var pred = function(n,s,z){ return n(function(f,g){ return g(f(s)) })(function(x){ return z })(function(x){ return x }) };
 
-var fact = function(r,n){ return ifzero(n)(_1)(mul(n)(r(pred(n)))) };
-(Y fact _3)</code></pre>
+var fact = function(r,n){ return if0(n)(_1)(mul(n)(r(pred(n)))) };
+Y(fact)(_3)</code></pre>
       </dd></dl>
       <p><a id="run-code12" href=".">run code12</a></p>
     </div>
