@@ -63,11 +63,11 @@
 }
 
 .console .marked > .argument,
-.console .marked > .argument *,
-.console .redex:hover > .argument,
-.console .redex:hover > .argument *
+.console .redex:hover > .argument
 {
-  text-decoration: underline;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #ffffff;
 }
 
 .console .redex
@@ -91,6 +91,31 @@
   outline-width: 1px;
   outline-color: #ff3333 ! important;
   background-color: #663333 ! important;
+}
+
+.console .shadowed:hover,
+.console .shadowed:active,
+.console .shadowed:active:hover
+{
+  outline-style: inherit ! important;
+  outline-width: inherit ! important;
+  outline-color: inherit ! important;
+  background-color: inherit ! important;
+}
+
+.console .shadowed:hover > .abstraction > .lambda
+{
+  color: #8c8ce8;
+}
+
+.console .shadowed:hover > .abstraction > .binding
+{
+  color: inherit ! important;
+}
+
+.console .shadowed:hover > .argument
+{
+  border-bottom-style: none ! important;
 }
 
 .console .reduce

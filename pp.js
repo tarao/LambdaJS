@@ -102,12 +102,24 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         node = $new('span', { klass: klass + ' marked' });
                         fun.body = self.markBound(fun.body, fun.arg);
                     } else if (app.redex) {
-                        node = $new('a', { klass: klass + ' redex' });
+                        node = $new('a', { klass: klass + ' redex shadowed' });
+                        var hover = {};
                         new UI.Observer(node, 'onclick', function(e) {
                             app.marked = true;
                             self.callback();
                             self.callback = function(){};
                             e.stop();
+                        });
+                        new UI.Observer(node, 'onmouseover', function(e) {
+                            if (/shadowed/.test(node.className)) {
+                                node.className = node.className.split(/\s+/)
+                                .filter(function(x){ return x!='shadowed'; })
+                                .join(' ');
+                            }
+                            e.stop();
+                        });
+                        new UI.Observer(node, 'onmouseout', function(e) {
+                            node.className = node.className + ' shadowed';
                         });
                     } else {
                         node = $new('span', { klass: klass });
