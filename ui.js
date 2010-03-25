@@ -330,7 +330,7 @@ if (typeof UI == 'undefined') var UI = {};
             } });
             return self;
         };
-        ns.Console = function(parent, cmd) {
+        ns.Console = function(parent, cmd, keyup, keydown) {
             var History = function(hist, index) {
                 var self = { hist: hist||[], index: index||-1 };
                 self.prev = function() {
@@ -351,6 +351,8 @@ if (typeof UI == 'undefined') var UI = {};
                 view: $new('ul'), parent: parent, promptChar: '>',
                 history: new History(),
                 command: cmd || function(){},
+                keyup: keyup || function(){ return false; },
+                keydown: keydown || function(){ return false; },
                 resizer: {}
             };
             self.resizer.corner = new Resizer(parent, { handle: '\u25a0' });
@@ -408,7 +410,7 @@ if (typeof UI == 'undefined') var UI = {};
                         setTimeout(function(){ self.command(text); }, 0);
                         break;
                     default:
-                        return;
+                        if (!self.keyup(e.event)) return;
                     }
                     e.stop();
                 });
@@ -426,11 +428,8 @@ if (typeof UI == 'undefined') var UI = {};
                     case 40: // down
                         self.input.value = history.next();
                         break;
-                    case 220: // '\\'
-                        insertText(self.input, '\u03bb');
-                        break;
                     default:
-                        return;
+                        if (!self.keydown(evnt)) return;
                     }
                     e.stop();
                 });

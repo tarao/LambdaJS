@@ -93,6 +93,14 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 }
                 return true;
             }, self.cont);
+        }, function(evnt) {
+            return false;
+        }, function(evnt) {
+            if ((evnt.charCode || evnt.keyCode) == 220) {
+                UI.insertText(self.console.input, '\u03bb');
+                return true;
+            }
+            return false;
         });
         self.sandbox = function(fun, cont) {
             try {
