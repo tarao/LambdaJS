@@ -400,7 +400,8 @@ if (typeof UI == 'undefined') var UI = {};
                 self.reposition();
                 var history = self.history.clone();
                 new Observer(self.input, 'onkeyup', function(e) {
-                    switch (e.event.charCode || e.event.keyCode) {
+                    var evnt = e.event;
+                    switch (evnt.charCode || evnt.keyCode) {
                     case 13: // Enter
                         var text = self.input.value;
                         self.history.push(text);
@@ -410,7 +411,7 @@ if (typeof UI == 'undefined') var UI = {};
                         setTimeout(function(){ self.command(text); }, 0);
                         break;
                     default:
-                        if (!self.keyup(e.event)) return;
+                        if (!self.keyup(evnt)) return;
                     }
                     e.stop();
                 });
