@@ -103,7 +103,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                         fun.body = self.markBound(fun.body, fun.arg);
                     } else if (app.redex) {
                         node = $new('a', { klass: klass + ' redex shadowed' });
-                        var hover = {};
                         new UI.Observer(node, 'onclick', function(e) {
                             app.marked = true;
                             self.callback();
@@ -119,7 +118,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                             e.stop();
                         });
                         new UI.Observer(node, 'onmouseout', function(e) {
-                            node.className = node.className + ' shadowed';
+                            node.className += ' shadowed';
                         });
                     } else {
                         node = $new('span', { klass: klass });
