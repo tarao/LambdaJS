@@ -20,12 +20,12 @@ LambdaJS is an interpreter of Lambda calculus written in JavaScript. It accepts 
 
 == Key bindings on the console
 
-Enter:: run
-Ctrl+L:: clear the screen
-Ctrl+P, up arrow:: previous input
-Ctrl+N, down arrow:: next input
-\\ (backslash):: input λ
+[Enter] run
+[Ctrl+L] clear the screen
+[Ctrl+P, up arrow] previous input
+[Ctrl+N, down arrow] next input
+[\\ (backslash)] input λ
 
 == Running example
 
-See http://labs.orezdnu.org/lambda/ .
+See http://labs.orezdnu.org/lambda .
