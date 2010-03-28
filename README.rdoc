@@ -15,6 +15,7 @@ LambdaJS is an interpreter of Lambda calculus written in JavaScript. It accepts 
 == Features
 
 - Written in JavaScript and no need for server-side execution
+- Visualizes reduction steps
 - Allows users to choose evaluation strategy
 - Accepts syntax of Lambda calculus, JavaScript or mixture of both
 
