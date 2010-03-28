@@ -122,7 +122,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 self[m] = function(visitor) {
                     var id = function(x){ return x; };
                     return (visitor[m+self.type]||id)(self);
-                }
+                };
             });
             return self;
         },
