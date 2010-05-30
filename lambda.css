@@ -139,6 +139,7 @@
   background-color: #444444;
   color: #ffffff;
   -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
   text-decoration: none;
   font-weight: bold;
 }
@@ -165,6 +166,7 @@
   text-align: center;
   background-color: #990000;
   -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
 }
 
 .resize-corner
@@ -207,6 +209,7 @@ ul.select li a
   color: #999999;
   background-color: #eeeeee;
   -moz-border-radius: .3em;
+  -webkit-border-radius: .3em;
 }
 
 ul.select li a:hover
@@ -233,6 +236,7 @@ ul.select li.selected a:visited:hover
   color: #ffffff;
   background-color: #666666;
   text-decoration: none;
+  border: solid 2px #999999;
 }
 
 #wait
