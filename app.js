@@ -312,7 +312,8 @@ function init(id) {
 
         // output
         if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
-        makeSelector('PP', 'JavaScript', function(key){ exmpls['to'+key](); });
+        var lang = /\#js$/.test(location.href) ? 'JavaScript' : 'Lambda';
+        makeSelector('PP', lang, function(key){ exmpls['to'+key](); });
 
         // wait
         var ul = UI.$('pp');
