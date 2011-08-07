@@ -299,9 +299,15 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 }).filter(function(l) { return !/^\s*$/.test(l) });
         };
         self.parseLine = function(line) {
+            if (new RegExp('^(.*?)//.*$').test(line)) {
+                line = RegExp.$1;
+            }
             line = line.replace(/^\s*/, '').replace(/\s*$/, '');
             if (/;/.test(line.charAt(line.length-1))) {
                 line = line.substring(0, line.length-1);
+            }
+            if (line.length && !new RegExp('^(let|var)').test(line)) {
+                line = '('+line+')';
             }
             return line.length ? self.parseExpr(line)+';' : '';
         };
