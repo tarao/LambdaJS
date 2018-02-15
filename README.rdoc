@@ -29,4 +29,4 @@ LambdaJS is an interpreter of Lambda calculus written in JavaScript. It accepts 
 
 == Running example
 
-See http://labs.orezdnu.org/lambda .
+See http://tarao.github.io/LambdaJS/ .

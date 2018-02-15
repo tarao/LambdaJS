@@ -84,12 +84,12 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 var num = RegExp.$2;
                 if ('z'.charCodeAt(0) < code) {
                     if (!num.length) num = 0;
-                    return freshVar(used, 'a'+(num+1));
+                    return this.freshVar(used, 'a'+(num+1));
                 } else {
-                    return freshVar(used, String.fromCharCode(code)+num);
+                    return this.freshVar(used, String.fromCharCode(code)+num);
                 }
             } else {
-                return freshVar(used, 'a');
+                return this.freshVar(used, 'a');
             }
         }
     };
