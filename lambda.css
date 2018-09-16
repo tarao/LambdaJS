@@ -210,6 +210,15 @@
   display: none;
 }
 
+#strategy,
+#allow-eta-reduction
+{
+  display: inline-block;
+  height: 1.3em;
+  margin: .5em 0 0 0;
+  vertical-align: top;
+}
+
 ul.select
 {
   list-style-type: none;

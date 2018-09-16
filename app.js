@@ -50,6 +50,9 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             getStrategy: function() {
                 return new LambdaJS.Strategy.Leftmost();
             },
+            getAllowEta: function() {
+                return UI.$('input-allow-eta').checked;
+            },
             getPP: function() {
                 return new LambdaJS.PP.Lambda();
             },
@@ -121,7 +124,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.mark = function() {
             self.sandbox(function() {
                 var strategy = self.getStrategy();
-                self.exp = strategy.mark(self.exp, true);
+                self.exp = strategy.mark(self.exp, self.getAllowEta());
                 if (strategy.marked) {
                     setTimeout(function() {
                         if (self.abort()) return;
