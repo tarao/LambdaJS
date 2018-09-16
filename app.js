@@ -134,14 +134,35 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
             self.sandbox(function() {
                 var strategy = self.getStrategy();
                 self.exp = strategy.reduceMarked(self.exp);
+
+                var output = [];
+                if (strategy.alpha) {
+                    var conv = UI.$new('span', {
+                        klass: 'alpha convert',
+                        child: '='
+                    });
+                    conv.appendChild(UI.$new('sub', {
+                        child: '\u03b1'
+                    }));
+                    output.push([ conv, self.marker.pp(strategy.alpha) ]);
+                }
                 if (strategy.reduced) {
                     var red = UI.$new('span', {
-                        klass: 'reduce',
+                        klass: 'beta reduce',
                         child: '\u2192'
                     });
+                    red.appendChild(UI.$new('sub', {
+                        child: '\u03b2'
+                    }));
+                    output.push([ red, self.marker.pp(self.exp) ]);
+                }
+
+                if (output.length > 0) {
                     setTimeout(function() {
                         if (self.abort()) return;
-                        self.console.insert(red, self.marker.pp(self.exp));
+                        output.forEach(function(o) {
+                            self.console.insert.apply(null, o);
+                        });
                         self.mark();
                     }, self.getWait());
                 } else {

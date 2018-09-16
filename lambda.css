@@ -118,9 +118,16 @@
   border-bottom-style: none ! important;
 }
 
-.console .reduce
+.console .reduce,
+.console .convert
 {
   margin-right: .5em;
+}
+
+.console .alpha.convert,
+.console .alpha.convert + *
+{
+  color: #defefe;
 }
 
 .prompt

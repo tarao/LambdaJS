@@ -133,20 +133,26 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     return self.body.clone();
                 });
             };
-            self.subst = function(arg, v) {         // (\x.M)[v:=N]
-                if (v.v == self.arg.v) return self; // (\x.M)[x:=N] = \x.M
+            self.subst = function(arg, v) { // (\x.M)[v:=N]
+                if (v.v == self.arg.v)      // (\x.M)[x:=N] = \x.M
+                    return { exp: self };
                 var fv1 = self.body.fv();   // fv(M)
                 var fv2 = arg.fv();         // fv(N)
                 var abs = self;
+                var alpha;
                 if (fv1[v.v||self.arg.v] && fv2[self.arg.v]) {
                     // alpha conversion
                     fv2[v.v||self.arg.v] = true;
                     var fresh = ns.Util.freshVar(fv2, 'a');
-                    abs.body = abs.body.subst(fresh, abs.arg);
-                    abs.arg = abs.arg.subst(fresh, abs.arg);
+                    abs.body = abs.body.subst(fresh, abs.arg).exp;
+                    abs.arg = abs.arg.subst(fresh, abs.arg).exp;
+                    alpha = abs.clone();
                 }
-                abs.body = abs.body.subst(arg.clone(), v);
-                return abs;
+                abs.body = abs.body.subst(arg.clone(), v).exp;
+                return {
+                    alpha: alpha,
+                    exp: abs
+                };
             };
             self.fv = function() {
                 var fv = self.body.fv();
@@ -164,11 +170,22 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 c.redex = self.redex;
                 return c;
             };
-            self.subst = function(arg, v) {
+            self.subst = function(m, v) {
                 var app = self;
-                app.fun = app.fun.subst(arg, v);
-                app.arg = app.arg.subst(arg.clone(), v);
-                return app;
+                var fun = app.fun.subst(m, v);
+                var arg = app.arg.subst(m.clone(), v);
+                var alpha;
+                if (fun.alpha || arg.alpha) {
+                    alpha = app.clone();
+                    alpha.fun = fun.alpha || app.fun.clone();
+                    alpha.arg = arg.alpha || app.arg.clone()
+                }
+                app.fun = fun.exp;
+                app.arg = arg.exp;
+                return {
+                    alpha: alpha,
+                    exp: app
+                };
             };
             self.fv = function() {
                 var fv1 = self.fun.fv();
@@ -184,7 +201,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return new ns.Semantics.Var(self.v+'');
             };
             self.subst = function(arg, v) {
-                return self.v == v.v ?  arg : self;
+                return { exp: self.v == v.v ?  arg : self };
             };
             self.fv = function() {
                 var fv = {};
@@ -216,7 +233,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             return self;
         },
         CallByName: function() {
-            var self = { reduced: false };
+            var self = { reduced: null };
             self.name = 'call by name';
             self.reduce = function(exp) {
                 return self.reduceMarked(self.mark(exp));
@@ -240,7 +257,8 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.markArg = function(arg){ return arg; };
             self.reduceMarked = function(exp) {
-                self.reduced = false;
+                self.reduced = null;
+                self.alpha = null;
                 return self._reduceMarked(exp);
             };
             self._reduceMarked = function(exp) {
@@ -248,14 +266,25 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.reduceMarkedAbs = function(abs) {
                 abs.body = self._reduceMarked(abs.body);
+                if (self.alpha) {
+                    var alpha = self.alpha;
+                    self.alpha = abs.clone();
+                    self.alpha.body = alpha;
+                }
                 return abs;
             };
             self.reduceMarkedApp = function(app) {
+                var clone = app.clone();
                 app.fun = self._reduceMarked(app.fun);
                 app.arg = self._reduceMarked(app.arg);
                 if (app.marked) {
-                    self.reduced = true;
-                    return app.fun.body.subst(app.arg, app.fun.arg);
+                    var reduced = app.fun.body.subst(app.arg, app.fun.arg);
+                    self.reduced = reduced.exp;
+                    if (reduced.alpha) {
+                        clone.fun.body = reduced.alpha;
+                        self.alpha = clone;
+                    }
+                    return reduced.exp;
                 }
                 return app;
             };
