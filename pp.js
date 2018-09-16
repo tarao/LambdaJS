@@ -134,13 +134,44 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     arg.className += ' binding';
                     var body = abs.body;
                     var args = [ arg ];
-                    while (body.type == 'Abs') {
-                        args.push(self._pp(body.arg));
-                        body = body.body;
+
+                    var node;
+                    var klass = 'abstraction';
+                    if (abs.marked) {
+                        abs.body = self.markBound(abs.body, abs.arg);
+                        node = $new('span', { klass: klass + ' marked' });
+                    } else if (abs.redex) {
+                        node = $new('a', {
+                            klass: klass + ' redex shadowed'
+                        });
+                        new UI.Observer(node, 'onclick', function(e) {
+                            abs.marked = true;
+                            self.callback();
+                            self.callback = function(){};
+                            e.stop();
+                        });
+                        new UI.Observer(node, 'onmouseover', function(e) {
+                            if (/shadowed/.test(node.className)) {
+                                node.className = node.className.split(/\s+/)
+                                .filter(function(x){ return x!='shadowed'; })
+                                .join(' ');
+                            }
+                            e.stop();
+                        });
+                        new UI.Observer(node, 'onmouseout', function(e) {
+                            node.className += ' shadowed';
+                        });
+                    } else {
+                        while (body.type == 'Abs') {
+                            if (body.marked || body.redex) break;
+                            args.push(self._pp(body.arg));
+                            body = body.body;
+                        }
+                        node = $new('span', {
+                            klass: klass
+                        });
                     }
-                    return self.lambda(args, self._pp(body))($new('span', {
-                        klass: 'abstraction'
-                    }));
+                    return self.lambda(args, self._pp(body))(node);
                 };
                 self.ppVar = function(v) {
                     var klass = 'variable';

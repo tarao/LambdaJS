@@ -41,6 +41,10 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         }
     };
     ns.Repl = function(elm, cont) {
+        var ReductionLabel = {
+            beta: '\u03b2',
+            eta: '\u03b7'
+        };
         var self = {
             getWait: function(){ return 500; },
             getStrategy: function() {
@@ -117,7 +121,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
         self.mark = function() {
             self.sandbox(function() {
                 var strategy = self.getStrategy();
-                self.exp = strategy.mark(self.exp);
+                self.exp = strategy.mark(self.exp, true);
                 if (strategy.marked) {
                     setTimeout(function() {
                         if (self.abort()) return;
@@ -148,11 +152,11 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 }
                 if (strategy.reduced) {
                     var red = UI.$new('span', {
-                        klass: 'beta reduce',
+                        klass: strategy.reduced + ' reduce',
                         child: '\u2192'
                     });
                     red.appendChild(UI.$new('sub', {
-                        child: '\u03b2'
+                        child: ReductionLabel[strategy.reduced]
                     }));
                     output.push([ red, self.marker.pp(self.exp) ]);
                 }
