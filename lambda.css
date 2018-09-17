@@ -48,26 +48,43 @@
   color: #ff0000;
 }
 
-.console .redex > .abstraction > .lambda
-{
-  color: #8c8ce8;
-}
+/* beta redex */
 
-.console .marked > .abstraction > .lambda,
-.console .marked > .abstraction > .binding,
-.console .marked .bound,
-.console .redex:hover > .abstraction > .lambda,
-.console .redex:hover > .abstraction > .binding
+.console .application.marked > .abstraction > .lambda,
+.console .application.marked > .abstraction > .binding,
+.console .application.marked .bound,
+.console .application.redex:hover > .abstraction > .lambda,
+.console .application.redex:hover > .abstraction > .binding
 {
   color: #00cccc;
 }
 
-.console .marked > .argument,
-.console .redex:hover > .argument
+.console .application.marked > .argument,
+.console .application.redex:hover > .argument
 {
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-bottom-color: #ffffff;
+}
+
+/* eta redex */
+
+.console .abstraction.marked > .lambda,
+.console .abstraction.marked > .binding,
+.console .abstraction.marked .bound,
+.console .abstraction.redex:hover > .lambda,
+.console .abstraction.redex:hover > .binding,
+.console .abstraction.redex:hover > .application:last-child > .variable:last-child
+{
+  color: #00cccc;
+}
+
+/* redex */
+
+.console .application.redex > .abstraction > .lambda,
+.console .abstraction.redex > .lambda
+{
+  color: #8c8ce8;
 }
 
 .console .redex
@@ -118,9 +135,22 @@
   border-bottom-style: none ! important;
 }
 
-.console .reduce
+.console .reduce,
+.console .convert
 {
   margin-right: .5em;
+}
+
+.console .eta.reduce,
+.console .eta.reduce + *
+{
+  color: #fefece;
+}
+
+.console .alpha.convert,
+.console .alpha.convert + *
+{
+  color: #cefefe;
 }
 
 .prompt
@@ -178,6 +208,15 @@
 #store
 {
   display: none;
+}
+
+#strategy,
+#allow-eta-reduction
+{
+  display: inline-block;
+  height: 1.3em;
+  margin: .5em 0 0 0;
+  vertical-align: top;
 }
 
 ul.select
