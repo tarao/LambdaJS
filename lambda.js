@@ -234,7 +234,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 if (allowEta && abs.isEtaRedex()) {
                     self.marked = true;
                     abs.marked = true;
-                    console.log('marked');
                     return abs;
                 }
                 abs.body = self._mark(abs.body, allowEta);
