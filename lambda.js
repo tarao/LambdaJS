@@ -283,9 +283,9 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         }
     };
     ns.Strategy = {
-        Leftmost: function() {
+        LeftmostOutermost: function() {
             var self = new Strategy.Base();
-            self.name = 'leftmost';
+            self.name = 'leftmost outermost';
             self.markAbs = function(abs, allowEta) {
                 if (allowEta && abs.isEtaRedex()) {
                     self.marked = true;
