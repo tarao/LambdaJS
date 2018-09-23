@@ -234,7 +234,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 if (allowEta && abs.isEtaRedex()) {
                     self.marked = true;
                     abs.marked = true;
-                    console.log('marked');
                     return abs;
                 }
                 abs.body = self._mark(abs.body, allowEta);
@@ -275,15 +274,18 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             self.markApp = function(app, allowEta) {
                 app.fun = self._mark(app.fun, allowEta);
-                if (app.fun.type != 'Abs') return app;
-                if (!self.marked) app.arg = self.markArg(app.arg, allowEta);
-                if (!self.marked) {
+                if (self.marked) return app;
+
+                if (app.fun.type == 'Abs') {
                     self.marked = true;
                     app.marked = true;
+                    return app;
                 }
+
+                if (!self.marked) app.arg = self._mark(app.arg, allowEta);
+
                 return app;
             };
-            self.markArg = function(arg){ return arg; };
             self.reduceMarked = function(exp) {
                 self.reduced = null;
                 self.alpha = null;
@@ -328,8 +330,19 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         CallByValue: function() {
             var self = new ns.Strategy.CallByName();
             self.name = 'call by value';
-            self.markArg = function(arg, allowEta) {
-                return self._mark(arg, allowEta);
+            self.markApp = function(app, allowEta) {
+                app.fun = self._mark(app.fun, allowEta);
+                if (self.marked) return app;
+
+                app.arg = self._mark(app.arg, allowEta);
+                if (self.marked) return app;
+
+                if (app.fun.type == 'Abs') {
+                    self.marked = true;
+                    app.marked = true;
+                }
+
+                return app;
             };
             return self;
         },
