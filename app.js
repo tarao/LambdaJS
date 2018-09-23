@@ -269,7 +269,7 @@ if (typeof LambdaJS.App == 'undefined') LambdaJS.App = {};
                 var repl = self.repl = new ns.Repl(div, function(){});
                 var get = function(k){ return UI.$('input-'+k).value; };
                 repl.getStrategy = function() {
-                    var st = self.st || get('strategy') || 'Leftmost';
+                    var st = self.st || get('strategy') || 'LeftmostOutermost';
                     return new LambdaJS.Strategy[st];
                 };
                 repl.getPP = function() {
@@ -336,7 +336,7 @@ function init(id) {
         };
 
         // strategy
-        makeSelector('Strategy', 'Leftmost');
+        makeSelector('Strategy', 'LeftmostOutermost');
 
         // output
         if (!isJS18Enabled()) delete LambdaJS.PP.JavaScript18;
