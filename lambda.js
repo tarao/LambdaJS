@@ -123,7 +123,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                     var args = Array.prototype.slice.call(arguments, 1);
                     args = [ self ].concat(args);
                     var id = function(x){ return x; };
-                    return (visitor[m+self.type]||id).apply(null, args);
+                    return (visitor[m+self.type]||id).apply(visitor, args);
                 };
             });
             return self;
@@ -226,35 +226,10 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
         }
     };
 
-    ns.Strategy = {
-        Leftmost: function() {
-            var self = new ns.Strategy.CallByName();
-            self.name = 'leftmost';
-            self.markAbs = function(abs, allowEta) {
-                if (allowEta && abs.isEtaRedex()) {
-                    self.marked = true;
-                    abs.marked = true;
-                    console.log('marked');
-                    return abs;
-                }
-                abs.body = self._mark(abs.body, allowEta);
-                return abs;
-            };
-            self.markApp = function(app, allowEta) {
-                if (app.fun.type == 'Abs') {
-                    self.marked = true;
-                    app.marked = true;
-                } else {
-                    app.fun = self._mark(app.fun, allowEta);
-                    if (!self.marked) app.arg = self._mark(app.arg, allowEta);
-                }
-                return app;
-            };
-            return self;
-        },
-        CallByName: function() {
+    var Strategy = {
+        Base: function() {
             var self = { reduced: null };
-            self.name = 'call by name';
+            self.name = '(base)';
             self.reduce = function(exp) {
                 return self.reduceMarked(self.mark(exp));
             };
@@ -265,25 +240,6 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             self._mark = function(exp, allowEta) {
                 return ns.Util.promote(exp).mark(self, allowEta);
             };
-            self.markAbs = function(abs, allowEta) {
-                if (!allowEta) return abs;
-                if (abs.isEtaRedex()) {
-                    self.marked = true;
-                    abs.marked = true;
-                }
-                return abs;
-            };
-            self.markApp = function(app, allowEta) {
-                app.fun = self._mark(app.fun, allowEta);
-                if (app.fun.type != 'Abs') return app;
-                if (!self.marked) app.arg = self.markArg(app.arg, allowEta);
-                if (!self.marked) {
-                    self.marked = true;
-                    app.marked = true;
-                }
-                return app;
-            };
-            self.markArg = function(arg){ return arg; };
             self.reduceMarked = function(exp) {
                 self.reduced = null;
                 self.alpha = null;
@@ -325,16 +281,89 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             };
             return self;
         },
-        CallByValue: function() {
-            var self = new ns.Strategy.CallByName();
-            self.name = 'call by value';
-            self.markArg = function(arg, allowEta) {
-                return self._mark(arg, allowEta);
+        Applicative: {
+            markApp: function(app, allowEta) {
+                app.fun = this._mark(app.fun, allowEta);
+                if (this.marked) return app;
+
+                app.arg = this._mark(app.arg, allowEta);
+                if (this.marked) return app;
+
+                if (app.fun.type == 'Abs') {
+                    this.marked = true;
+                    app.marked = true;
+                }
+
+                return app;
+            }
+        }
+    };
+    ns.Strategy = {
+        LeftmostOutermost: function() {
+            var self = new Strategy.Base();
+            self.name = 'leftmost outermost';
+            self.markAbs = function(abs, allowEta) {
+                if (allowEta && abs.isEtaRedex()) {
+                    self.marked = true;
+                    abs.marked = true;
+                    return abs;
+                }
+                abs.body = self._mark(abs.body, allowEta);
+                return abs;
+            };
+            self.markApp = function(app, allowEta) {
+                if (app.fun.type == 'Abs') {
+                    self.marked = true;
+                    app.marked = true;
+                } else {
+                    app.fun = self._mark(app.fun, allowEta);
+                    if (!self.marked) app.arg = self._mark(app.arg, allowEta);
+                }
+                return app;
             };
             return self;
         },
-        Manual: function() {
+        LeftmostInnermost: function() {
+            var self = new ns.Strategy.LeftmostOutermost();
+            self.name = 'leftmost innermost';
+            self.markApp = Strategy.Applicative.markApp;
+            return self;
+        },
+        CallByName: function() {
+            var self = new Strategy.Base();
+            self.name = 'call by name';
+            self.markAbs = function(abs, allowEta) {
+                if (!allowEta) return abs;
+                if (abs.isEtaRedex()) {
+                    self.marked = true;
+                    abs.marked = true;
+                }
+                return abs;
+            };
+            self.markApp = function(app, allowEta) {
+                app.fun = self._mark(app.fun, allowEta);
+                if (self.marked) return app;
+
+                if (app.fun.type == 'Abs') {
+                    self.marked = true;
+                    app.marked = true;
+                    return app;
+                }
+
+                if (!self.marked) app.arg = self._mark(app.arg, allowEta);
+
+                return app;
+            };
+            return self;
+        },
+        CallByValue: function() {
             var self = new ns.Strategy.CallByName();
+            self.name = 'call by value';
+            self.markApp = Strategy.Applicative.markApp;
+            return self;
+        },
+        Manual: function() {
+            var self = new Strategy.Base();
             self.name = 'manual';
             self.markAbs = function(abs, allowEta) {
                 abs.body = self._mark(abs.body, allowEta);
