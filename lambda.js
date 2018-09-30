@@ -366,6 +366,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
             var self = new Strategy.Base();
             self.name = 'manual';
             self.markAbs = function(abs, allowEta) {
+                abs.redex = false;
                 abs.body = self._mark(abs.body, allowEta);
                 if (allowEta && abs.isEtaRedex()) {
                     self.marked = true;
@@ -375,6 +376,7 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 return abs;
             };
             self.markApp = function(app, allowEta) {
+                app.redex = false;
                 if (app.fun.type == 'Abs') {
                     self.marked = true;
                     app.redex = true;
@@ -382,6 +384,12 @@ if (typeof LambdaJS == 'undefined') var LambdaJS = {};
                 app.fun = self._mark(app.fun, allowEta);
                 app.arg = self._mark(app.arg, allowEta);
                 return app;
+            };
+            var reduceMarked = self.reduceMarked;
+            self.reduceMarked = function(exp) {
+                var r = reduceMarked.call(self, exp);
+                self.mark(exp);
+                return r;
             };
             return self;
         }
